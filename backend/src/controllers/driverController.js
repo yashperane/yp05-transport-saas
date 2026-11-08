@@ -319,9 +319,10 @@ export const updateDriverStatus = async (req, res) => {
       data: { driver },
     });
   } catch (error) {
+    console.error('updateDriverStatus error:', error);
     return res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to update driver status.' },
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to update driver status.' },
     });
   }
 };

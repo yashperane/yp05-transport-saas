@@ -133,7 +133,7 @@ export const assignVehicle = async (req, res) => {
     console.error('assignVehicle error:', error);
     return res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to assign vehicle.' },
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to assign vehicle.' },
     });
   }
 };

@@ -103,16 +103,18 @@ export default function DashboardLayout() {
       {/* Main Workspace */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-3">
           {/* Driver Portal Tab (Only for Driver) */}
           {isDriver && (
             <button
               onClick={() => setActiveTab('driver-portal')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'driver-portal' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'driver-portal' 
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <Radio className="w-3.5 h-3.5" />
+              <Radio className="w-4 h-4" />
               <span>Driver Portal</span>
             </button>
           )}
@@ -121,11 +123,13 @@ export default function DashboardLayout() {
           {isOwnerOrDispatcher && (
             <button
               onClick={() => setActiveTab('dispatch')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'dispatch' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'dispatch' 
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <Radio className="w-3.5 h-3.5" />
+              <Radio className="w-4 h-4" />
               <span>Dispatch Center</span>
             </button>
           )}
@@ -134,11 +138,13 @@ export default function DashboardLayout() {
           {!isDriver && (
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'orders' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'orders' 
+                  ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg shadow-sky-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <ClipboardList className="w-3.5 h-3.5" />
+              <ClipboardList className="w-4 h-4" />
               <span>Orders Management</span>
             </button>
           )}
@@ -147,11 +153,13 @@ export default function DashboardLayout() {
           {isCompanyUser && (
             <button
               onClick={() => setActiveTab('company-workspace')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'company-workspace' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'company-workspace' 
+                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <LayoutDashboard className="w-3.5 h-3.5" />
+              <LayoutDashboard className="w-4 h-4" />
               <span>Company Workspace</span>
             </button>
           )}
@@ -160,11 +168,13 @@ export default function DashboardLayout() {
           {isOwnerOrDispatcher && (
             <button
               onClick={() => setActiveTab('fleet')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'fleet' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'fleet' 
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <Truck className="w-3.5 h-3.5" />
+              <Truck className="w-4 h-4" />
               <span>Fleet & Drivers</span>
             </button>
           )}
@@ -173,32 +183,38 @@ export default function DashboardLayout() {
           {isOwnerOrDispatcher && (
             <button
               onClick={() => setActiveTab('companies')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === 'companies' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+                activeTab === 'companies' 
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/30 scale-[1.02]' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" />
+              <Building2 className="w-4 h-4" />
               <span>Companies Directory</span>
             </button>
           )}
 
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-              activeTab === 'profile' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+              activeTab === 'profile' 
+                ? 'bg-gradient-to-r from-slate-700 to-slate-600 text-white shadow-lg shadow-slate-700/30 scale-[1.02]' 
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
             }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
+            <ShieldCheck className="w-4 h-4" />
             <span>My Profile</span>
           </button>
 
           <button
             onClick={() => setActiveTab('rbac-test')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-              activeTab === 'rbac-test' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
+              activeTab === 'rbac-test' 
+                ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-lg shadow-rose-600/30 scale-[1.02]' 
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
             }`}
           >
-            <Activity className="w-3.5 h-3.5" />
+            <Activity className="w-4 h-4" />
             <span>RBAC Verification Matrix</span>
           </button>
         </div>
