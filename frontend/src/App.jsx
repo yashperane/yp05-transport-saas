@@ -44,12 +44,12 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-white flex items-center gap-2">
-              Sherkar Transport SaaS
+              Transport SaaS Project
               <span className="text-xs bg-sky-500/20 text-sky-400 font-medium px-2 py-0.5 rounded-full border border-sky-500/30">
                 Pilot v1.0
               </span>
             </h1>
-            <p className="text-xs text-slate-400">Fleet & Multi-tenant Logistics Platform (MERN Stack)</p>
+            <p className="text-xs text-slate-400">Multi-tenant Transport & Fleet Management System (MERN Stack)</p>
           </div>
         </div>
 
@@ -85,14 +85,14 @@ export default function App() {
         <div className="bg-gradient-to-r from-sky-950/60 to-slate-900 border border-sky-900/40 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
           <div className="max-w-2xl space-y-3">
             <span className="text-xs uppercase tracking-wider text-sky-400 font-semibold">
-              Chapter 1 — Project Foundation Active
+              Chapter 2 — Architecture & Database Design
             </span>
             <h2 className="text-2xl md:text-3xl font-extrabold text-white">
-              Digitizing Sherkar Transport Operations
+              Transport Management & Multi-Tenant Architecture
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Operating 4 pickup/tempo vehicles (1 driven by Sherkar, 3 by drivers). 
-              Eliminating phone coordination, duplicate orders, and manual trip tracking with isolated multi-tenant architecture.
+              Designed for pilot fleet operations (1 owner vehicle, 3 driver vehicles) with complete multi-tenant isolation, 
+              scalable to multiple independent transport operators and customer workspaces.
             </p>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        Transport & Fleet Management SaaS • Chapter 1 Foundation Ready
+        Transport SaaS Project • Chapter 2 System Architecture & Database Design Ready
       </footer>
     </div>
   );

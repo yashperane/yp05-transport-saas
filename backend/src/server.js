@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { config } from './config/env.js';
 import { connectDatabase } from './config/database.js';
 import { healthRouter } from './routes/health.js';
+import './models/index.js';
 
 const app = express();
 const server = http.createServer(app);

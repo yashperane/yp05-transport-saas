@@ -1,8 +1,8 @@
-# Sherkar Fleet & Transport Management SaaS
+# Transport SaaS Project
 
 A modern, scalable, multi-tenant Transport and Fleet Management SaaS platform built on the **MERN** stack (MongoDB, Express.js, React, Node.js).
 
-Designed for transport operators like **Sherkar** operating pickup/tempo vehicles transporting laborers and goods across companies, contractors, and individuals.
+Designed for transport operations (handling pickup/tempo vehicles transporting laborers and goods across companies, contractors, and individuals), with the initial pilot configured for transport owner Sherkar.
 
 ---
 

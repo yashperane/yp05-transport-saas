@@ -23,6 +23,7 @@ healthRouter.get('/', (_req, res) => {
     database: {
       status: dbStatus,
       connected: mongoose.connection.readyState === 1,
+      registeredModels: mongoose.modelNames(),
     },
     system: {
       nodeVersion: process.version,
