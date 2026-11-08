@@ -1,36 +1,161 @@
 /**
- * driverOrderController.js
- *
- * Chapter 7: Driver-scoped order views with tenant isolation and visibility settings.
- *
- * A driver must NEVER see:
- *  - Orders from another transport business (tenant isolation)
- *  - Another driver's private assigned orders
- *  - Internal pricing or owner notes
- *
- * The backend enforces visibility based on:
- *  1. The authenticated user's Driver profile (via userId lookup)
- *  2. The transport business's driverOrderVisibility setting
+ * driverOrderController.js - Extended for Chapter 8
  */
-
 import { Order } from '../models/Order.js';
 import { Driver } from '../models/Driver.js';
+import { Vehicle } from '../models/Vehicle.js';
 import { TransportBusiness } from '../models/TransportBusiness.js';
+import { OrderAssignmentHistory } from '../models/OrderAssignmentHistory.js';
+import { OrderHistory } from '../models/OrderHistory.js';
 
-// ─────────────────────────────────────────────────────────────
-// HELPER: Retrieve the driver's profile for the authenticated user
-// ─────────────────────────────────────────────────────────────
 const getDriverForUser = async (userId, transportBusinessId) => {
-  return Driver.findOne({ userId, transportBusinessId }).lean();
+  return Driver.findOne({ userId, transportBusinessId });
 };
 
-// Fields safe to return to driver (excludes pricing, internal notes)
 const DRIVER_SAFE_FIELDS = '-pricingDetails -duplicateReviewStatus -assignedByUserId';
 
 /**
+ * GET /api/driver/orders/summary
+ * Real metrics for Driver Dashboard home
+ */
+export const getDriverDashboardSummary = async (req, res) => {
+  try {
+    const transportBusinessId = req.user.transportBusinessId;
+    const userId = req.user._id;
+
+    const driver = await getDriverForUser(userId, transportBusinessId);
+    if (!driver) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'NOT_A_DRIVER', message: 'No driver profile associated with your account.' },
+      });
+    }
+
+    // Check active job blocking availability
+    const activeJob = await Order.findOne({
+      transportBusinessId,
+      assignedDriverId: driver._id,
+      status: { $in: ['in_progress', 'accepted', 'assigned'] },
+    }).lean();
+
+    const [assignedCount, acceptedCount, inProgressCount, completedCount, availableCount] = await Promise.all([
+      Order.countDocuments({ transportBusinessId, assignedDriverId: driver._id, status: 'assigned' }),
+      Order.countDocuments({ transportBusinessId, assignedDriverId: driver._id, status: 'accepted' }),
+      Order.countDocuments({ transportBusinessId, assignedDriverId: driver._id, status: 'in_progress' }),
+      Order.countDocuments({ transportBusinessId, assignedDriverId: driver._id, status: 'completed' }),
+      Order.countDocuments({ transportBusinessId, status: 'available', assignedDriverId: null }),
+    ]);
+
+    let assignedVehicle = null;
+    if (driver.currentVehicleId) {
+      assignedVehicle = await Vehicle.findById(driver.currentVehicleId)
+        .select('registrationNumber vehicleNumber vehicleType status capacity capacityUnit fuelType')
+        .lean();
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        driver: {
+          _id: driver._id,
+          fullName: driver.fullName,
+          phoneNumber: driver.phoneNumber,
+          employmentStatus: driver.employmentStatus,
+          availabilityStatus: driver.availabilityStatus,
+          licenseNumber: driver.licenseNumber,
+          licenseType: driver.licenseType,
+          hasActiveJob: !!activeJob,
+          activeJobOrderId: activeJob?._id || null,
+        },
+        assignedVehicle,
+        metrics: {
+          assigned: assignedCount,
+          accepted: acceptedCount,
+          inProgress: inProgressCount,
+          completed: completedCount,
+          available: availableCount,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('getDriverDashboardSummary error:', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to retrieve driver metrics.' },
+    });
+  }
+};
+
+/**
+ * PATCH /api/driver/orders/availability
+ * Driver changes availability (available <-> off_duty). Blocked if active job exists.
+ */
+export const updateSelfAvailability = async (req, res) => {
+  try {
+    const transportBusinessId = req.user.transportBusinessId;
+    const userId = req.user._id;
+    const { availabilityStatus } = req.body;
+
+    if (!['available', 'off_duty'].includes(availabilityStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_STATUS', message: 'Drivers can only toggle between available and off_duty.' },
+      });
+    }
+
+    const driver = await getDriverForUser(userId, transportBusinessId);
+    if (!driver) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'NOT_A_DRIVER', message: 'No driver profile associated with your account.' },
+      });
+    }
+
+    if (driver.employmentStatus !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INACTIVE_DRIVER', message: 'Inactive or suspended drivers cannot change availability.' },
+      });
+    }
+
+    // Check if driver has an active assigned or in_progress job
+    if (availabilityStatus === 'available') {
+      const activeJob = await Order.findOne({
+        transportBusinessId,
+        assignedDriverId: driver._id,
+        status: { $in: ['in_progress', 'accepted', 'assigned'] },
+      }).lean();
+
+      if (activeJob) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'ACTIVE_JOB_BLOCK',
+            message: `You have an active job (${activeJob.orderNumber}) in progress. Complete it before marking yourself available.`,
+          },
+        });
+      }
+    }
+
+    driver.availabilityStatus = availabilityStatus;
+    await driver.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Availability updated to ${availabilityStatus}.`,
+      data: { driver },
+    });
+  } catch (error) {
+    console.error('updateSelfAvailability error:', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to update availability.' },
+    });
+  }
+};
+
+/**
  * GET /api/driver/orders/assigned
- * Returns orders assigned to the authenticated driver.
- * Never returns another driver's orders.
  */
 export const getMyAssignedOrders = async (req, res) => {
   try {
@@ -48,44 +173,34 @@ export const getMyAssignedOrders = async (req, res) => {
       });
     }
 
-    // Check visibility settings
-    const business = await TransportBusiness.findById(transportBusinessId)
-      .select('settings')
-      .lean();
+    const business = await TransportBusiness.findById(transportBusinessId).select('settings').lean();
     const visibility = business?.settings?.driverOrderVisibility || 'assigned_and_available';
 
     if (visibility === 'available_only') {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'VISIBILITY_RESTRICTED',
-          message: 'Your account is configured to view available orders only.',
-        },
+        error: { code: 'VISIBILITY_RESTRICTED', message: 'Your account is configured to view available orders only.' },
       });
     }
 
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status, page = 1, limit = 50 } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.max(1, Math.min(50, parseInt(limit, 10)));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10)));
     const skip = (pageNum - 1) * limitNum;
 
-    // Build query — always scoped to this driver and this tenant
     const query = {
       transportBusinessId,
-      assignedDriverId: driver._id, // CRITICAL: only this driver's orders
+      assignedDriverId: driver._id,
     };
 
     if (status) {
       query.status = status;
-    } else {
-      // Default: active orders only (not completed/cancelled)
-      query.status = { $in: ['assigned', 'accepted', 'in_progress'] };
     }
 
     const [orders, total] = await Promise.all([
       Order.find(query)
         .select(DRIVER_SAFE_FIELDS)
-        .populate('companyId', 'companyName contactPerson')
+        .populate('companyId', 'companyName contactPerson phone')
         .populate('assignedVehicleId', 'registrationNumber vehicleType vehicleNumber')
         .sort({ requiredDate: 1, createdAt: -1 })
         .skip(skip)
@@ -98,32 +213,20 @@ export const getMyAssignedOrders = async (req, res) => {
       success: true,
       data: {
         orders,
-        pagination: {
-          total,
-          page: pageNum,
-          limit: limitNum,
-          totalPages: Math.ceil(total / limitNum),
-        },
+        pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
       },
     });
   } catch (error) {
     console.error('getMyAssignedOrders error:', error);
     return res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to retrieve your assigned orders.' },
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to retrieve your assigned orders.' },
     });
   }
 };
 
 /**
  * GET /api/driver/orders/available
- * Returns orders that are available for the authenticated driver to claim.
- *
- * Eligibility checks (backend-enforced, not frontend):
- *  1. Driver must be active + available
- *  2. Business must allow self-claim
- *  3. Order must be in 'available' status
- *  4. Order must belong to the same tenant
  */
 export const getMyAvailableOrders = async (req, res) => {
   try {
@@ -134,61 +237,41 @@ export const getMyAvailableOrders = async (req, res) => {
     if (!driver) {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'NOT_A_DRIVER',
-          message: 'No driver profile associated with your account.',
-        },
+        error: { code: 'NOT_A_DRIVER', message: 'No driver profile associated with your account.' },
       });
     }
 
-    // Check visibility and dispatch settings
-    const business = await TransportBusiness.findById(transportBusinessId)
-      .select('settings')
-      .lean();
+    const business = await TransportBusiness.findById(transportBusinessId).select('settings').lean();
     const visibility = business?.settings?.driverOrderVisibility || 'assigned_and_available';
     const dispatchMode = business?.settings?.dispatchMode || 'both';
 
     if (visibility === 'assigned_only') {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'VISIBILITY_RESTRICTED',
-          message: 'You can only view your assigned orders.',
-        },
+        error: { code: 'VISIBILITY_RESTRICTED', message: 'You can only view your assigned orders.' },
       });
     }
 
     if (dispatchMode === 'manual_assignment') {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'SELF_CLAIM_DISABLED',
-          message: 'Driver self-claim is disabled for this business.',
-        },
+        error: { code: 'SELF_CLAIM_DISABLED', message: 'Driver self-claim is disabled for this business.' },
       });
     }
 
-    // Driver eligibility — must be available to see claimable orders
     if (driver.employmentStatus !== 'active') {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'DRIVER_INACTIVE',
-          message: 'Your driver account is not active.',
-        },
+        error: { code: 'DRIVER_INACTIVE', message: 'Your driver account is not active.' },
       });
     }
 
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 50 } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.max(1, Math.min(50, parseInt(limit, 10)));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10)));
 
     const [orders, total] = await Promise.all([
-      Order.find({
-        transportBusinessId,
-        status: 'available',
-        assignedDriverId: null,
-      })
+      Order.find({ transportBusinessId, status: 'available', assignedDriverId: null })
         .select(DRIVER_SAFE_FIELDS)
         .populate('companyId', 'companyName')
         .sort({ requiredDate: 1 })
@@ -204,26 +287,21 @@ export const getMyAvailableOrders = async (req, res) => {
         driverAvailability: driver.availabilityStatus,
         canClaim: driver.availabilityStatus === 'available',
         orders,
-        pagination: {
-          total,
-          page: pageNum,
-          limit: limitNum,
-          totalPages: Math.ceil(total / limitNum),
-        },
+        pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
       },
     });
   } catch (error) {
     console.error('getMyAvailableOrders error:', error);
     return res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to retrieve available orders.' },
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to retrieve available orders.' },
     });
   }
 };
 
 /**
  * GET /api/driver/orders/:orderId
- * Get single order detail for driver — only if assigned to this driver or available.
+ * Detailed order info + activity timeline for driver
  */
 export const getDriverOrderById = async (req, res) => {
   try {
@@ -242,7 +320,7 @@ export const getDriverOrderById = async (req, res) => {
     const order = await Order.findOne({ _id: orderId, transportBusinessId })
       .select(DRIVER_SAFE_FIELDS)
       .populate('companyId', 'companyName contactPerson phone')
-      .populate('assignedVehicleId', 'registrationNumber vehicleType vehicleNumber')
+      .populate('assignedVehicleId', 'registrationNumber vehicleType vehicleNumber capacity capacityUnit fuelType')
       .lean();
 
     if (!order) {
@@ -252,30 +330,32 @@ export const getDriverOrderById = async (req, res) => {
       });
     }
 
-    // Access control: driver can only see orders assigned to them OR available orders
-    const isAssignedToMe =
-      order.assignedDriverId?.toString() === driver._id.toString();
+    const isAssignedToMe = order.assignedDriverId?.toString() === driver._id.toString();
     const isAvailable = order.status === 'available';
 
     if (!isAssignedToMe && !isAvailable) {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to view this order.',
-        },
+        error: { code: 'FORBIDDEN', message: 'You do not have permission to view this order.' },
       });
     }
 
+    // Fetch activity history
+    const history = await OrderHistory.find({ orderId, transportBusinessId })
+      .select('action description createdAt performedByUserId')
+      .populate('performedByUserId', 'name role')
+      .sort({ createdAt: 1 })
+      .lean();
+
     return res.status(200).json({
       success: true,
-      data: { order },
+      data: { order, timeline: history },
     });
   } catch (error) {
     console.error('getDriverOrderById error:', error);
     return res.status(500).json({
       success: false,
-      error: { code: 'SERVER_ERROR', message: 'Failed to retrieve order.' },
+      error: { code: 'SERVER_ERROR', message: error.message || 'Failed to retrieve order details.' },
     });
   }
 };

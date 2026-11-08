@@ -13,26 +13,29 @@ import {
   ShieldCheck, 
   LogOut, 
   Activity, 
-  ShieldAlert, 
   Building2, 
   CheckCircle2, 
   XCircle,
-  Clock,
-  Sparkles,
   LayoutDashboard,
   ClipboardList,
   Radio,
+  Menu,
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, token, logout } = useAuth();
   
-  // Decide default tab based on role
   const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
   const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
   const isDriver = user?.role === 'driver';
   
-  const [activeTab, setActiveTab] = useState(isDriver ? 'driver-portal' : isOwnerOrDispatcher ? 'dispatch' : 'orders');
+  // Default tab based on role
+  const [activeTab, setActiveTab] = useState(
+    isDriver ? 'driver-portal' : isOwnerOrDispatcher ? 'dispatch' : 'orders'
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [rbacTestResult, setRbacTestResult] = useState(null);
   const [testingEndpoint, setTestingEndpoint] = useState('');
 
@@ -49,353 +52,241 @@ export default function DashboardLayout() {
     }
   };
 
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case 'super_admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'owner': return 'bg-sky-500/20 text-sky-400 border-sky-500/30';
-      case 'dispatcher': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
-      case 'driver': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'company_admin': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'company_employee': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
-    }
+  const roleBadgeStyles = {
+    super_admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    owner: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+    dispatcher: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    driver: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    company_admin: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    company_employee: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   };
 
+  const navItems = [
+    { id: 'driver-portal', label: 'Driver Portal', icon: Radio, show: isDriver },
+    { id: 'dispatch', label: 'Dispatch Center', icon: Radio, show: isOwnerOrDispatcher },
+    { id: 'orders', label: 'Orders', icon: ClipboardList, show: !isDriver },
+    { id: 'fleet', label: 'Fleet & Drivers', icon: Truck, show: isOwnerOrDispatcher },
+    { id: 'company-workspace', label: 'Workspace', icon: LayoutDashboard, show: isCompanyUser },
+    { id: 'companies', label: 'Companies', icon: Building2, show: isOwnerOrDispatcher },
+    { id: 'profile', label: 'Profile', icon: ShieldCheck, show: true },
+    { id: 'rbac-test', label: 'RBAC Matrix', icon: Activity, show: true },
+  ].filter((item) => item.show);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
-      {/* Top Bar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="bg-sky-600 p-2 rounded-xl text-white shadow-lg shadow-sky-600/30">
-            <Truck className="w-5 h-5" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-white">
+      {/* Top Application Shell Header */}
+      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo & Product Brand Identity (Neutral) */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-sm shadow-sky-600/30">
+              <Truck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold tracking-tight text-slate-100">Transport SaaS Project</span>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${roleBadgeStyles[user.role] || 'bg-slate-800 text-slate-400'}`}>
+                  {user.role}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-none mt-0.5">
+                {user.businessName || 'Sherkar Transport'} {user.companyName ? `• ${user.companyName}` : ''}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base font-bold text-white flex items-center gap-2">
-              Transport SaaS Project
-              <span className={`text-xs px-2 py-0.5 rounded-full border ${getRoleBadgeColor(user.role)}`}>
-                {user.role?.toUpperCase()}
-              </span>
-            </h1>
-            <p className="text-xs text-slate-400">
-              {user.businessName ? `Tenant: ${user.businessName}` : 'Platform Management'}
-              {user.companyName && ` • Workspace: ${user.companyName}`}
-            </p>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    isActive 
+                      ? 'bg-slate-800 text-white' 
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* User profile & Sign Out */}
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <span className="text-xs font-medium text-slate-200 block">{user.name}</span>
+              <span className="text-[11px] text-slate-400 block font-mono">{user.email}</span>
+            </div>
+
+            <button
+              onClick={logout}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-950/20 hover:border-red-900/40 transition"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+
+            {/* Mobile Menu Trigger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* User Info & Logout */}
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs font-semibold text-white">{user.name}</div>
-            <div className="text-[11px] text-slate-400">{user.email}</div>
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden pt-3 pb-2 border-t border-slate-800/80 mt-2 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition ${
+                    isActive ? 'bg-sky-600 text-white' : 'text-slate-300 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
-
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-900/50 bg-red-950/40 text-red-300 hover:bg-red-900/60 transition"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
-        </div>
+        )}
       </header>
 
-      {/* Main Workspace */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 space-y-6">
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-3">
-          {/* Driver Portal Tab (Only for Driver) */}
-          {isDriver && (
-            <button
-              onClick={() => setActiveTab('driver-portal')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'driver-portal' 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <Radio className="w-4 h-4" />
-              <span>Driver Portal</span>
-            </button>
-          )}
-
-          {/* Dispatch Center (Owner and Dispatcher) */}
-          {isOwnerOrDispatcher && (
-            <button
-              onClick={() => setActiveTab('dispatch')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'dispatch' 
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <Radio className="w-4 h-4" />
-              <span>Dispatch Center</span>
-            </button>
-          )}
-
-          {/* Orders Management Tab (Central to non-driver authorized roles) */}
-          {!isDriver && (
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'orders' 
-                  ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg shadow-sky-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <ClipboardList className="w-4 h-4" />
-              <span>Orders Management</span>
-            </button>
-          )}
-
-          {/* Company Workspace Tab (for Company Admin and Employee) */}
-          {isCompanyUser && (
-            <button
-              onClick={() => setActiveTab('company-workspace')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'company-workspace' 
-                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Company Workspace</span>
-            </button>
-          )}
-
-          {/* Fleet & Vehicles Management (Owner and Dispatcher) */}
-          {isOwnerOrDispatcher && (
-            <button
-              onClick={() => setActiveTab('fleet')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'fleet' 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <Truck className="w-4 h-4" />
-              <span>Fleet & Drivers</span>
-            </button>
-          )}
-
-          {/* Owner/Dispatcher Companies Directory */}
-          {isOwnerOrDispatcher && (
-            <button
-              onClick={() => setActiveTab('companies')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                activeTab === 'companies' 
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/30 scale-[1.02]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>Companies Directory</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-              activeTab === 'profile' 
-                ? 'bg-gradient-to-r from-slate-700 to-slate-600 text-white shadow-lg shadow-slate-700/30 scale-[1.02]' 
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>My Profile</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('rbac-test')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-              activeTab === 'rbac-test' 
-                ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-lg shadow-rose-600/30 scale-[1.02]' 
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-            }`}
-          >
-            <Activity className="w-4 h-4" />
-            <span>RBAC Verification Matrix</span>
-          </button>
-        </div>
-
-        {/* Tab Content: Driver Portal */}
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Dynamic Workspace Body */}
         {activeTab === 'driver-portal' && isDriver && (
           <DriverPortal />
         )}
 
-        {/* Tab Content: Dispatch Center */}
         {activeTab === 'dispatch' && isOwnerOrDispatcher && (
           <DispatchCenter />
         )}
 
-        {/* Tab Content: Orders Management */}
         {activeTab === 'orders' && (
           <OrderManager />
         )}
 
-        {/* Tab Content: Fleet & Drivers Management */}
         {activeTab === 'fleet' && isOwnerOrDispatcher && (
           <FleetHub />
         )}
 
-        {/* Tab Content: Company Workspace */}
         {activeTab === 'company-workspace' && isCompanyUser && (
           <CompanyWorkspace />
         )}
 
-        {/* Tab Content: Companies Directory (Owner/Dispatcher) */}
         {activeTab === 'companies' && isOwnerOrDispatcher && (
           <CompaniesManager />
         )}
 
-        {/* Tab 1: Profile Details */}
+        {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-sky-400" />
-                Verified Server-Side Identity
+                Verified Server Identity
               </h3>
 
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">Full Name</span>
-                  <div className="font-semibold text-slate-200">{user.name}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/60 space-y-0.5">
+                  <span className="text-[10px] text-slate-400 uppercase font-medium">Full Name</span>
+                  <p className="font-medium text-slate-200">{user.name}</p>
                 </div>
-
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">Email Address</span>
-                  <div className="font-semibold text-slate-200">{user.email}</div>
+                <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/60 space-y-0.5">
+                  <span className="text-[10px] text-slate-400 uppercase font-medium">Email</span>
+                  <p className="font-mono text-slate-200">{user.email}</p>
                 </div>
-
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">User Role</span>
-                  <div className="font-semibold text-sky-400">{user.role}</div>
+                <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/60 space-y-0.5">
+                  <span className="text-[10px] text-slate-400 uppercase font-medium">Assigned Role</span>
+                  <p className="font-medium text-sky-400 capitalize">{user.role}</p>
                 </div>
-
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">Account Status</span>
-                  <div className="font-semibold text-emerald-400">{user.status}</div>
-                </div>
-
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">Transport Business Tenant ID</span>
-                  <div className="font-mono text-slate-300 truncate">{user.transportBusinessId || 'N/A (Platform Admin)'}</div>
-                </div>
-
-                <div className="p-3 bg-slate-900/80 rounded-xl space-y-1">
-                  <span className="text-slate-500">Company Workspace ID</span>
-                  <div className="font-mono text-slate-300 truncate">{user.companyId || 'N/A (Transport Staff)'}</div>
+                <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800/60 space-y-0.5">
+                  <span className="text-[10px] text-slate-400 uppercase font-medium">Tenant ID</span>
+                  <p className="font-mono text-slate-300 truncate">{user.transportBusinessId || 'Platform Scope'}</p>
                 </div>
               </div>
             </div>
 
-            {/* Quick Overview Card */}
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-teal-400" />
-                Role Permissions Scope
+                Authorization Scope
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                {user.role === 'owner' && 'Full administrative rights over vehicles, drivers, customer pricing, and company visibility settings.'}
-                {user.role === 'dispatcher' && 'Operational dispatch permissions: assign vehicles, assign drivers, and monitor ongoing orders.'}
-                {user.role === 'driver' && 'Driver portal permissions: claim available orders atomically, accept assignments, update trip status.'}
-                {user.role === 'company_admin' && 'Company workspace administrator: create transport orders, view order tracking, manage company team.'}
-                {user.role === 'company_employee' && 'Company order creator: create booking requests and view company order history.'}
+                Role-based access control enforces tenant isolation and workspace boundaries on every endpoint.
               </p>
-              <div className="text-[11px] text-sky-400 font-mono bg-sky-950/40 p-2.5 rounded-lg border border-sky-800/40">
-                🔒 Backend Isolation: Tenant boundaries enforced on Express API middleware.
+              <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-[11px] text-slate-400 font-mono">
+                Status: Verified Active
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 2: RBAC Security Verification Matrix */}
+        {/* RBAC Matrix Tab */}
         {activeTab === 'rbac-test' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-sky-400" />
-                  Live RBAC Authorization Test Matrix
-                </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Click the endpoints below to test backend role-based access control. If your current role (<span className="text-sky-400 font-semibold">{user.role}</span>) is not permitted, the backend Express middleware will return a 403 Forbidden error.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                <button
-                  onClick={() => testEndpoint('test-owner')}
-                  disabled={testingEndpoint !== ''}
-                  className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition space-y-1"
-                >
-                  <div className="text-xs font-bold text-sky-400">GET /test-owner</div>
-                  <div className="text-[11px] text-slate-400">Allowed: [owner]</div>
-                </button>
-
-                <button
-                  onClick={() => testEndpoint('test-dispatcher')}
-                  disabled={testingEndpoint !== ''}
-                  className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition space-y-1"
-                >
-                  <div className="text-xs font-bold text-teal-400">GET /test-dispatcher</div>
-                  <div className="text-[11px] text-slate-400">Allowed: [owner, dispatcher]</div>
-                </button>
-
-                <button
-                  onClick={() => testEndpoint('test-driver')}
-                  disabled={testingEndpoint !== ''}
-                  className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition space-y-1"
-                >
-                  <div className="text-xs font-bold text-emerald-400">GET /test-driver</div>
-                  <div className="text-[11px] text-slate-400">Allowed: [driver]</div>
-                </button>
-
-                <button
-                  onClick={() => testEndpoint('test-company')}
-                  disabled={testingEndpoint !== ''}
-                  className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition space-y-1"
-                >
-                  <div className="text-xs font-bold text-amber-400">GET /test-company</div>
-                  <div className="text-[11px] text-slate-400">Allowed: [company_admin, employee]</div>
-                </button>
-              </div>
-
-              {/* Result Preview */}
-              {rbacTestResult && (
-                <div className={`p-4 rounded-xl border ${
-                  rbacTestResult.status === 200 
-                    ? 'bg-emerald-950/40 border-emerald-800/60' 
-                    : 'bg-red-950/40 border-red-800/60'
-                } space-y-2`}>
-                  <div className="flex items-center gap-2 text-xs font-bold">
-                    {rbacTestResult.status === 200 ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span className="text-emerald-400">HTTP 200 OK — Authorized Access</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-4 h-4 text-red-400" />
-                        <span className="text-red-400">HTTP {rbacTestResult.status} — Access Blocked (RBAC Working)</span>
-                      </>
-                    )}
-                  </div>
-                  <pre className="p-3 bg-slate-950 rounded-lg text-xs font-mono text-slate-300 overflow-x-auto border border-slate-800">
-                    {JSON.stringify(rbacTestResult.body, null, 2)}
-                  </pre>
-                </div>
-              )}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+            <div>
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <Activity className="w-4 h-4 text-sky-400" />
+                Role-Based Access Control Verification
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Test Express middleware security. Non-permitted endpoints will return HTTP 403 Forbidden.
+              </p>
             </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { name: 'test-owner', label: 'GET /test-owner', roles: 'owner' },
+                { name: 'test-dispatcher', label: 'GET /test-dispatcher', roles: 'owner, dispatcher' },
+                { name: 'test-driver', label: 'GET /test-driver', roles: 'driver' },
+                { name: 'test-company', label: 'GET /test-company', roles: 'company_admin, employee' },
+              ].map((t) => (
+                <button
+                  key={t.name}
+                  onClick={() => testEndpoint(t.name)}
+                  disabled={testingEndpoint !== ''}
+                  className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 rounded-lg text-left transition text-xs space-y-1"
+                >
+                  <span className="font-semibold text-sky-400 block">{t.label}</span>
+                  <span className="text-[11px] text-slate-400 block">Allowed: {t.roles}</span>
+                </button>
+              ))}
+            </div>
+
+            {rbacTestResult && (
+              <div className={`p-4 rounded-lg border text-xs font-mono ${
+                rbacTestResult.status === 200 ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300' : 'bg-red-950/30 border-red-800/40 text-red-300'
+              }`}>
+                <div className="font-semibold mb-2">Response: HTTP {rbacTestResult.status}</div>
+                <pre className="text-[11px] overflow-x-auto">{JSON.stringify(rbacTestResult.body, null, 2)}</pre>
+              </div>
+            )}
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-3.5 text-center text-xs text-slate-500">
-        Transport SaaS Project • Chapter 3 Authentication & RBAC Active
+      {/* Production Footer */}
+      <footer className="border-t border-slate-800/80 py-3 text-center text-[11px] text-slate-500 bg-slate-950">
+        Transport SaaS Project • Production Architecture v1.0
       </footer>
     </div>
   );
