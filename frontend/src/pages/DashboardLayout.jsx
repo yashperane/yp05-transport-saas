@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { authApi } from '../services/authApi.js';
+import CompaniesManager from '../components/CompaniesManager.jsx';
+import CompanyWorkspace from '../components/CompanyWorkspace.jsx';
 import { 
   Truck, 
   Users, 
@@ -12,12 +14,20 @@ import {
   CheckCircle2, 
   XCircle,
   Clock,
-  Sparkles
+  Sparkles,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, token, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  
+  // Decide default tab based on role
+  const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
+  const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
+  
+  const [activeTab, setActiveTab] = useState(
+    isCompanyUser ? 'company-workspace' : isOwnerOrDispatcher ? 'companies' : 'profile'
+  );
   const [rbacTestResult, setRbacTestResult] = useState(null);
   const [testingEndpoint, setTestingEndpoint] = useState('');
 
@@ -88,24 +98,63 @@ export default function DashboardLayout() {
       {/* Main Workspace */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex gap-2 border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+          {/* Company Workspace Tab (for Company Admin and Employee) */}
+          {isCompanyUser && (
+            <button
+              onClick={() => setActiveTab('company-workspace')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'company-workspace' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Company Workspace</span>
+            </button>
+          )}
+
+          {/* Owner/Dispatcher Companies Directory */}
+          {isOwnerOrDispatcher && (
+            <button
+              onClick={() => setActiveTab('companies')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'companies' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Companies Directory</span>
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab('profile')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
               activeTab === 'profile' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
             }`}
           >
-            My Profile & Session
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>My Profile</span>
           </button>
+
           <button
             onClick={() => setActiveTab('rbac-test')}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
               activeTab === 'rbac-test' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
             }`}
           >
-            RBAC & Security Verification Matrix
+            <Activity className="w-3.5 h-3.5" />
+            <span>RBAC Verification Matrix</span>
           </button>
         </div>
+
+        {/* Tab Content: Company Workspace */}
+        {activeTab === 'company-workspace' && isCompanyUser && (
+          <CompanyWorkspace />
+        )}
+
+        {/* Tab Content: Companies Directory (Owner/Dispatcher) */}
+        {activeTab === 'companies' && isOwnerOrDispatcher && (
+          <CompaniesManager />
+        )}
 
         {/* Tab 1: Profile Details */}
         {activeTab === 'profile' && (

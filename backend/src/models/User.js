@@ -35,7 +35,9 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password hash is required'],
+      required: function () {
+        return this.status !== 'invited';
+      },
     },
     role: {
       type: String,
@@ -52,8 +54,17 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive', 'suspended'],
+      enum: ['active', 'inactive', 'suspended', 'invited'],
       default: 'active',
+    },
+    invitationToken: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    invitationExpiresAt: {
+      type: Date,
+      default: null,
     },
     permissions: [
       {

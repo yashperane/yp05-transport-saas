@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import AcceptInviteModal from '../components/AcceptInviteModal.jsx';
 import { Truck, Lock, Mail, AlertCircle, KeyRound, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('Password123!');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,9 +139,24 @@ export default function LoginPage() {
                 <div className="text-[10px] text-slate-500">companyadmin@tataprojects.local</div>
               </button>
             </div>
+
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(true)}
+                className="text-xs text-sky-400 hover:text-sky-300 underline font-medium"
+              >
+                Have an invitation token? Activate your account here
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <AcceptInviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   );
 }
