@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { authApi } from '../services/authApi.js';
 import CompaniesManager from '../components/CompaniesManager.jsx';
 import CompanyWorkspace from '../components/CompanyWorkspace.jsx';
+import OrderManager from '../components/OrderManager.jsx';
 import { 
   Truck, 
   Users, 
@@ -15,7 +16,8 @@ import {
   XCircle,
   Clock,
   Sparkles,
-  LayoutDashboard
+  LayoutDashboard,
+  ClipboardList
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -25,9 +27,7 @@ export default function DashboardLayout() {
   const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
   const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
   
-  const [activeTab, setActiveTab] = useState(
-    isCompanyUser ? 'company-workspace' : isOwnerOrDispatcher ? 'companies' : 'profile'
-  );
+  const [activeTab, setActiveTab] = useState('orders'); // Default to Orders
   const [rbacTestResult, setRbacTestResult] = useState(null);
   const [testingEndpoint, setTestingEndpoint] = useState('');
 
@@ -99,6 +99,17 @@ export default function DashboardLayout() {
       <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 space-y-6">
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+          {/* Orders Management Tab (Central to all authorized roles) */}
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+              activeTab === 'orders' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+            }`}
+          >
+            <ClipboardList className="w-3.5 h-3.5" />
+            <span>Orders Management</span>
+          </button>
+
           {/* Company Workspace Tab (for Company Admin and Employee) */}
           {isCompanyUser && (
             <button
@@ -145,6 +156,11 @@ export default function DashboardLayout() {
             <span>RBAC Verification Matrix</span>
           </button>
         </div>
+
+        {/* Tab Content: Orders Management */}
+        {activeTab === 'orders' && (
+          <OrderManager />
+        )}
 
         {/* Tab Content: Company Workspace */}
         {activeTab === 'company-workspace' && isCompanyUser && (

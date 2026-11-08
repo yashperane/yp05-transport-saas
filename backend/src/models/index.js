@@ -7,6 +7,7 @@ import { PricingAgreement } from './PricingAgreement.js';
 import { Order } from './Order.js';
 import { OrderHistory } from './OrderHistory.js';
 import { VehicleLocationHistory } from './VehicleLocationHistory.js';
+import { Counter } from './Counter.js';
 
 export {
   TransportBusiness,
@@ -18,4 +19,5 @@ export {
   Order,
   OrderHistory,
   VehicleLocationHistory,
+  Counter,
 };
