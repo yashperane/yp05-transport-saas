@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import cookieParser from 'cookie-parser';
 import { Server as SocketIOServer } from 'socket.io';
 import { config } from './config/env.js';
 import { connectDatabase } from './config/database.js';
 import { healthRouter } from './routes/health.js';
+import { authRouter } from './routes/auth.js';
 import './models/index.js';
 
 const app = express();
@@ -20,6 +22,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Socket.IO setup (foundation for real-time tracking and orders)
 export const io = new SocketIOServer(server, {
@@ -39,6 +42,7 @@ io.on('connection', (socket) => {
 
 // Mount Routes
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
 
 app.get('/', (_req, res) => {
   res.json({

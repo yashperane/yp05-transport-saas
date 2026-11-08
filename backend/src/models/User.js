@@ -72,4 +72,11 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ transportBusinessId: 1, role: 1 });
 
+// Remove passwordHash from JSON transformations
+userSchema.methods.toJSON = function () {
+  const userObject = this.toObject();
+  delete userObject.passwordHash;
+  return userObject;
+};
+
 export const User = mongoose.model('User', userSchema);
