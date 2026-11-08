@@ -9,6 +9,7 @@ import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
 import { companyRouter } from './routes/company.js';
 import { orderRouter } from './routes/order.js';
+import { fleetRouter } from './routes/fleet.js';
 import { acceptInvitation } from './controllers/companyUserController.js';
 import './models/index.js';
 
@@ -48,6 +49,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/companies', companyRouter);
 app.use('/api/orders', orderRouter);
+app.use('/api/fleet', fleetRouter);
 app.post('/api/invitations/accept', acceptInvitation);
 
 app.get('/', (_req, res) => {

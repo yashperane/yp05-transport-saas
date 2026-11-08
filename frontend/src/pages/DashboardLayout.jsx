@@ -4,6 +4,7 @@ import { authApi } from '../services/authApi.js';
 import CompaniesManager from '../components/CompaniesManager.jsx';
 import CompanyWorkspace from '../components/CompanyWorkspace.jsx';
 import OrderManager from '../components/OrderManager.jsx';
+import FleetHub from '../components/FleetHub.jsx';
 import { 
   Truck, 
   Users, 
@@ -123,6 +124,19 @@ export default function DashboardLayout() {
             </button>
           )}
 
+          {/* Fleet & Vehicles Management (Owner and Dispatcher) */}
+          {isOwnerOrDispatcher && (
+            <button
+              onClick={() => setActiveTab('fleet')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'fleet' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Fleet & Drivers</span>
+            </button>
+          )}
+
           {/* Owner/Dispatcher Companies Directory */}
           {isOwnerOrDispatcher && (
             <button
@@ -160,6 +174,11 @@ export default function DashboardLayout() {
         {/* Tab Content: Orders Management */}
         {activeTab === 'orders' && (
           <OrderManager />
+        )}
+
+        {/* Tab Content: Fleet & Drivers Management */}
+        {activeTab === 'fleet' && isOwnerOrDispatcher && (
+          <FleetHub />
         )}
 
         {/* Tab Content: Company Workspace */}

@@ -83,10 +83,12 @@ Frontend will run on: **`http://localhost:5173`**
 ---
 
 ## 🗺️ Roadmap
-- **Chapter 1:** Project Foundation & Architecture (Completed)
-- **Chapter 2:** Authentication, Roles & Company Management
-- **Chapter 3:** Driver & Vehicle Fleet Management
-- **Chapter 4:** Order Lifecycle & Duplicate Detection
-- **Chapter 5:** Atomic Dispatch & Real-Time Socket.IO Driver Claiming
-- **Chapter 6:** Google Maps, ETA & Controlled Live Tracking
-- **Chapter 7:** Pricing Models & Customer Billing
+- **Chapter 1:** Project Foundation & Requirements (Completed)
+- **Chapter 2:** System Architecture & Database Design (Completed)
+- **Chapter 3:** Authentication, Authorization & RBAC (Completed)
+- **Chapter 4:** Company Management & User Management (Completed)
+- **Chapter 5:** Order Management System & Duplicate Detection (Completed)
+- **Chapter 6:** Driver Management & Vehicle Management System (Completed)
+- **Chapter 7:** Live Dispatch, Tracking & Maps Integration (Upcoming)
+- **Chapter 8:** Billing, Invoicing & Contract Pricing (Upcoming)
+

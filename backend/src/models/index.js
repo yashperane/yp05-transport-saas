@@ -8,6 +8,7 @@ import { Order } from './Order.js';
 import { OrderHistory } from './OrderHistory.js';
 import { VehicleLocationHistory } from './VehicleLocationHistory.js';
 import { Counter } from './Counter.js';
+import { VehicleAssignmentHistory } from './VehicleAssignmentHistory.js';
 
 export {
   TransportBusiness,
@@ -20,4 +21,5 @@ export {
   OrderHistory,
   VehicleLocationHistory,
   Counter,
+  VehicleAssignmentHistory,
 };
