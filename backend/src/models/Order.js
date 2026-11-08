@@ -170,12 +170,25 @@ const orderSchema = new mongoose.Schema(
       ref: 'Vehicle',
       default: null,
     },
+    assignedByUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null, // null for self-claim
+    },
     assignmentMode: {
       type: String,
       enum: ['admin_assignment', 'driver_self_assignment', 'unassigned'],
       default: 'unassigned',
     },
     assignedAt: {
+      type: Date,
+      default: null,
+    },
+    acceptedAt: {
+      type: Date,
+      default: null,
+    },
+    startedAt: {
       type: Date,
       default: null,
     },
@@ -255,5 +268,9 @@ orderSchema.index({ transportBusinessId: 1, companyId: 1, createdAt: -1 });
 orderSchema.index({ transportBusinessId: 1, orderType: 1 });
 orderSchema.index({ transportBusinessId: 1, 'pickupLocation.address': 1 });
 orderSchema.index({ transportBusinessId: 1, 'destinationLocation.address': 1 });
+// Chapter 7: Dispatch-specific indexes
+orderSchema.index({ transportBusinessId: 1, assignedDriverId: 1 });
+orderSchema.index({ transportBusinessId: 1, assignedVehicleId: 1 });
+orderSchema.index({ transportBusinessId: 1, status: 1, requiredDate: 1 });
 
 export const Order = mongoose.model('Order', orderSchema);

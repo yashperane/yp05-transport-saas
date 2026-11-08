@@ -89,6 +89,7 @@ Frontend will run on: **`http://localhost:5173`**
 - **Chapter 4:** Company Management & User Management (Completed)
 - **Chapter 5:** Order Management System & Duplicate Detection (Completed)
 - **Chapter 6:** Driver Management & Vehicle Management System (Completed)
-- **Chapter 7:** Live Dispatch, Tracking & Maps Integration (Upcoming)
-- **Chapter 8:** Billing, Invoicing & Contract Pricing (Upcoming)
+- **Chapter 7:** Order Dispatch & Driver Assignment System (Completed)
+- **Chapter 8:** Live GPS Tracking, Maps & ETA Calculation (Upcoming)
+- **Chapter 9:** Contract Pricing, Billing & Customer Invoicing (Upcoming)
 

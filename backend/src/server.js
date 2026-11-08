@@ -10,7 +10,11 @@ import { authRouter } from './routes/auth.js';
 import { companyRouter } from './routes/company.js';
 import { orderRouter } from './routes/order.js';
 import { fleetRouter } from './routes/fleet.js';
+import { dispatchRouter } from './routes/dispatch.js';
+import { driverOrderRouter } from './routes/driverOrders.js';
 import { acceptInvitation } from './controllers/companyUserController.js';
+import { verifyAccessToken } from './utils/jwt.js';
+import { User } from './models/User.js';
 import './models/index.js';
 
 const app = express();
@@ -28,19 +32,79 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Socket.IO setup (foundation for real-time tracking and orders)
+// ─────────────────────────────────────────────────────────────
+// Socket.IO Setup — Chapter 7: Authenticated + Tenant-Scoped
+//
+// HOW SOCKET.IO ROOMS WORK:
+//  1. Client connects and sends JWT token in handshake auth
+//  2. Backend verifies the JWT and finds the user in database
+//  3. If valid, the socket joins two rooms:
+//     - 'tenant:{transportBusinessId}' — broadcasts to everyone in this tenant
+//     - 'driver:{userId}' — private room for direct driver notifications
+//  4. When a dispatch event occurs (order claimed, assigned etc.),
+//     the backend emits ONLY to the relevant room(s)
+//  5. Unknown sockets are rejected — no unauthenticated joins
+//
+// WHY THIS IS SECURE:
+//  - Client CANNOT join a room by name from the client side
+//  - Server controls all room assignments after JWT verification
+//  - Tenant A events NEVER reach Tenant B sockets
+// ─────────────────────────────────────────────────────────────
 export const io = new SocketIOServer(server, {
   cors: {
     origin: config.clientUrl,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
+// Socket.IO Authentication Middleware
+io.use(async (socket, next) => {
+  try {
+    // Client must pass token in socket handshake: socket.auth = { token: '...' }
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+      return next(new Error('SOCKET_UNAUTHORIZED: Authentication token missing.'));
+    }
+
+    let decoded;
+    try {
+      decoded = verifyAccessToken(token);
+    } catch {
+      return next(new Error('SOCKET_UNAUTHORIZED: Invalid or expired token.'));
+    }
+
+    const user = await User.findById(decoded.userId).select('_id role transportBusinessId status').lean();
+    if (!user || user.status !== 'active') {
+      return next(new Error('SOCKET_UNAUTHORIZED: User account invalid or inactive.'));
+    }
+
+    // Attach trusted identity to socket — cannot be overridden by client
+    socket.userId = user._id.toString();
+    socket.role = user.role;
+    socket.transportBusinessId = user.transportBusinessId?.toString() || null;
+
+    next();
+  } catch (err) {
+    next(new Error('SOCKET_AUTH_ERROR: ' + err.message));
+  }
+});
+
 io.on('connection', (socket) => {
-  console.log(`⚡ Real-time client connected: ${socket.id}`);
+  console.log(`⚡ Authenticated socket connected: ${socket.id} [${socket.role}]`);
+
+  // Join tenant-scoped room (broadcasts to all business staff)
+  if (socket.transportBusinessId) {
+    socket.join(`tenant:${socket.transportBusinessId}`);
+  }
+
+  // Join private driver room (for direct order assignment notifications)
+  if (socket.role === 'driver') {
+    socket.join(`driver:${socket.userId}`);
+  }
 
   socket.on('disconnect', () => {
-    console.log(`🔌 Real-time client disconnected: ${socket.id}`);
+    console.log(`🔌 Socket disconnected: ${socket.id}`);
   });
 });
 
@@ -49,6 +113,8 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/companies', companyRouter);
 app.use('/api/orders', orderRouter);
+app.use('/api/orders', dispatchRouter);    // Chapter 7: dispatch actions on order IDs
+app.use('/api/driver/orders', driverOrderRouter);  // Chapter 7: driver portal
 app.use('/api/fleet', fleetRouter);
 app.post('/api/invitations/accept', acceptInvitation);
 
@@ -66,6 +132,7 @@ const startServer = async () => {
   server.listen(config.port, () => {
     console.log(`🚀 Backend server is running on http://localhost:${config.port}`);
     console.log(`🩺 Health check accessible at: http://localhost:${config.port}/api/health`);
+    console.log(`⚡ Socket.IO real-time dispatch ready`);
   });
 };
 

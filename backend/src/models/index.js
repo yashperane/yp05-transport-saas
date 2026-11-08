@@ -6,6 +6,7 @@ import { Vehicle } from './Vehicle.js';
 import { PricingAgreement } from './PricingAgreement.js';
 import { Order } from './Order.js';
 import { OrderHistory } from './OrderHistory.js';
+import { OrderAssignmentHistory } from './OrderAssignmentHistory.js';
 import { VehicleLocationHistory } from './VehicleLocationHistory.js';
 import { Counter } from './Counter.js';
 import { VehicleAssignmentHistory } from './VehicleAssignmentHistory.js';
@@ -19,6 +20,7 @@ export {
   PricingAgreement,
   Order,
   OrderHistory,
+  OrderAssignmentHistory,
   VehicleLocationHistory,
   Counter,
   VehicleAssignmentHistory,

@@ -5,6 +5,8 @@ import CompaniesManager from '../components/CompaniesManager.jsx';
 import CompanyWorkspace from '../components/CompanyWorkspace.jsx';
 import OrderManager from '../components/OrderManager.jsx';
 import FleetHub from '../components/FleetHub.jsx';
+import DispatchCenter from '../components/DispatchCenter.jsx';
+import DriverPortal from '../components/DriverPortal.jsx';
 import { 
   Truck, 
   Users, 
@@ -18,7 +20,8 @@ import {
   Clock,
   Sparkles,
   LayoutDashboard,
-  ClipboardList
+  ClipboardList,
+  Radio,
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -27,8 +30,9 @@ export default function DashboardLayout() {
   // Decide default tab based on role
   const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
   const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
+  const isDriver = user?.role === 'driver';
   
-  const [activeTab, setActiveTab] = useState('orders'); // Default to Orders
+  const [activeTab, setActiveTab] = useState(isDriver ? 'driver-portal' : isOwnerOrDispatcher ? 'dispatch' : 'orders');
   const [rbacTestResult, setRbacTestResult] = useState(null);
   const [testingEndpoint, setTestingEndpoint] = useState('');
 
@@ -100,16 +104,44 @@ export default function DashboardLayout() {
       <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 space-y-6">
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
-          {/* Orders Management Tab (Central to all authorized roles) */}
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
-              activeTab === 'orders' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
-            }`}
-          >
-            <ClipboardList className="w-3.5 h-3.5" />
-            <span>Orders Management</span>
-          </button>
+          {/* Driver Portal Tab (Only for Driver) */}
+          {isDriver && (
+            <button
+              onClick={() => setActiveTab('driver-portal')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'driver-portal' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>Driver Portal</span>
+            </button>
+          )}
+
+          {/* Dispatch Center (Owner and Dispatcher) */}
+          {isOwnerOrDispatcher && (
+            <button
+              onClick={() => setActiveTab('dispatch')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'dispatch' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>Dispatch Center</span>
+            </button>
+          )}
+
+          {/* Orders Management Tab (Central to non-driver authorized roles) */}
+          {!isDriver && (
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'orders' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>Orders Management</span>
+            </button>
+          )}
 
           {/* Company Workspace Tab (for Company Admin and Employee) */}
           {isCompanyUser && (
@@ -170,6 +202,16 @@ export default function DashboardLayout() {
             <span>RBAC Verification Matrix</span>
           </button>
         </div>
+
+        {/* Tab Content: Driver Portal */}
+        {activeTab === 'driver-portal' && isDriver && (
+          <DriverPortal />
+        )}
+
+        {/* Tab Content: Dispatch Center */}
+        {activeTab === 'dispatch' && isOwnerOrDispatcher && (
+          <DispatchCenter />
+        )}
 
         {/* Tab Content: Orders Management */}
         {activeTab === 'orders' && (
