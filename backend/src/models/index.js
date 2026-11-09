@@ -11,6 +11,8 @@ import { VehicleLocationHistory } from './VehicleLocationHistory.js';
 import { Counter } from './Counter.js';
 import { VehicleAssignmentHistory } from './VehicleAssignmentHistory.js';
 import { Notification } from './Notification.js';
+import { Invoice } from './Invoice.js';
+import { Payment } from './Payment.js';
 
 export {
   TransportBusiness,
@@ -26,4 +28,6 @@ export {
   Counter,
   VehicleAssignmentHistory,
   Notification,
+  Invoice,
+  Payment,
 };

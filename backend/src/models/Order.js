@@ -306,6 +306,23 @@ const orderSchema = new mongoose.Schema(
         default: '',
       },
     },
+    // Chapter 11: Billing & Invoicing Integration
+    invoicingStatus: {
+      type: String,
+      enum: ['unbilled', 'invoiced', 'exempt'],
+      default: 'unbilled',
+      index: true,
+    },
+    invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice',
+      default: null,
+      index: true,
+    },
+    invoicedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -324,5 +341,7 @@ orderSchema.index({ transportBusinessId: 1, 'destinationLocation.address': 1 });
 orderSchema.index({ transportBusinessId: 1, assignedDriverId: 1 });
 orderSchema.index({ transportBusinessId: 1, assignedVehicleId: 1 });
 orderSchema.index({ transportBusinessId: 1, status: 1, requiredDate: 1 });
+// Chapter 11: Invoicing index
+orderSchema.index({ transportBusinessId: 1, status: 1, invoicingStatus: 1 });
 
 export const Order = mongoose.model('Order', orderSchema);

@@ -9,6 +9,7 @@ import DispatchCenter from '../components/DispatchCenter.jsx';
 import DriverPortal from '../components/DriverPortal.jsx';
 import NotificationCenter from '../components/NotificationCenter.jsx';
 import PricingManager from '../components/PricingManager.jsx';
+import BillingManager from '../components/BillingManager.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
 import { 
   Truck, 
@@ -24,7 +25,8 @@ import {
   Radio,
   Menu,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Receipt
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -70,6 +72,7 @@ export default function DashboardLayout() {
     { id: 'dispatch', label: 'Dispatch Center', icon: Radio, show: isOwnerOrDispatcher },
     { id: 'orders', label: 'Orders', icon: ClipboardList, show: !isDriver },
     { id: 'pricing', label: 'Contracts & Rates', icon: Sparkles, show: isOwnerOrDispatcher },
+    { id: 'billing', label: 'Billing & Invoices', icon: Receipt, show: !isDriver },
     { id: 'fleet', label: 'Fleet & Drivers', icon: Truck, show: isOwnerOrDispatcher },
     { id: 'company-workspace', label: 'Workspace', icon: LayoutDashboard, show: isCompanyUser },
     { id: 'companies', label: 'Client Accounts', icon: Building2, show: isOwnerOrDispatcher },
@@ -215,6 +218,10 @@ export default function DashboardLayout() {
 
         {activeTab === 'pricing' && isOwnerOrDispatcher && (
           <PricingManager />
+        )}
+
+        {activeTab === 'billing' && !isDriver && (
+          <BillingManager />
         )}
 
         {activeTab === 'company-workspace' && isCompanyUser && (
