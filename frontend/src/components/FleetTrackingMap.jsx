@@ -91,28 +91,39 @@ export default function FleetTrackingMap() {
             speed: telemetry.speed,
             heading: telemetry.heading,
             accuracy: telemetry.accuracy,
+            address: telemetry.address || updated[matchIndex].address || '',
             recordedAt: telemetry.recordedAt,
             isStale: false,
           };
+          // Also update selectedVehicle if it matches
+          setSelectedVehicle((curr) => {
+            if (!curr) return updated[matchIndex];
+            if (curr._id === updated[matchIndex]._id ||
+                curr.driverId?._id === telemetry.driverId) {
+              return updated[matchIndex];
+            }
+            return curr;
+          });
           return updated;
         }
 
         // If not already in list, append live broadcasting vehicle
-        return [
-          {
-            _id: telemetry.locationId || Math.random().toString(),
-            vehicleId: telemetry.vehicleId ? { registrationNumber: telemetry.vehicleNumber, _id: telemetry.vehicleId } : { registrationNumber: telemetry.vehicleNumber || 'Driver GPS' },
-            driverId: { fullName: telemetry.driverName, _id: telemetry.driverId },
-            latitude: telemetry.latitude,
-            longitude: telemetry.longitude,
-            speed: telemetry.speed,
-            heading: telemetry.heading,
-            accuracy: telemetry.accuracy,
-            recordedAt: telemetry.recordedAt,
-            isStale: false,
-          },
-          ...prev,
-        ];
+        const newEntry = {
+          _id: telemetry.locationId || Math.random().toString(),
+          vehicleId: telemetry.vehicleId ? { registrationNumber: telemetry.vehicleNumber, _id: telemetry.vehicleId } : { registrationNumber: telemetry.vehicleNumber || 'Driver GPS' },
+          driverId: { fullName: telemetry.driverName, _id: telemetry.driverId },
+          latitude: telemetry.latitude,
+          longitude: telemetry.longitude,
+          speed: telemetry.speed,
+          heading: telemetry.heading,
+          accuracy: telemetry.accuracy,
+          address: telemetry.address || '',
+          recordedAt: telemetry.recordedAt,
+          isStale: false,
+        };
+        // Auto-select the first vehicle that appears
+        setSelectedVehicle((curr) => curr || newEntry);
+        return [newEntry, ...prev];
       });
     };
 

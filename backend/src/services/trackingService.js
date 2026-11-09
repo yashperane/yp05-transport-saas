@@ -2,6 +2,7 @@ import { VehicleLocation } from '../models/VehicleLocation.js';
 import { VehicleLocationHistory } from '../models/VehicleLocationHistory.js';
 import { Vehicle } from '../models/Vehicle.js';
 import { Driver } from '../models/Driver.js';
+import { User } from '../models/User.js';
 import { Order } from '../models/Order.js';
 import { TransportBusiness } from '../models/TransportBusiness.js';
 import { realtimeService } from './realtimeService.js';
