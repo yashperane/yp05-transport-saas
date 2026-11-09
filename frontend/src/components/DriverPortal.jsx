@@ -104,9 +104,9 @@ export default function DriverPortal() {
           await trackingApi.updateLocation(token, {
             latitude,
             longitude,
-            accuracy,
-            heading,
-            speed,
+            accuracy: accuracy || null,
+            heading: heading || null,
+            speed: (typeof speed === 'number' && !isNaN(speed)) ? speed : null,
             source: 'driver_mobile_browser',
           });
         } catch (err) {

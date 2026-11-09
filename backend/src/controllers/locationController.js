@@ -12,14 +12,20 @@ export const updateLocation = async (req, res) => {
     const transportBusinessId = req.user.transportBusinessId;
     const { latitude, longitude, accuracy, heading, speed, source } = req.body;
 
+    const parseSafeFloat = (val) => {
+      if (val === null || val === undefined || val === '') return null;
+      const num = Number(val);
+      return Number.isNaN(num) ? null : num;
+    };
+
     const location = await trackingService.updateDriverLocation({
       driverUserId,
       transportBusinessId,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      accuracy: accuracy !== undefined ? parseFloat(accuracy) : null,
-      heading: heading !== undefined ? parseFloat(heading) : null,
-      speed: speed !== undefined ? parseFloat(speed) : null,
+      latitude: parseSafeFloat(latitude),
+      longitude: parseSafeFloat(longitude),
+      accuracy: parseSafeFloat(accuracy),
+      heading: parseSafeFloat(heading),
+      speed: parseSafeFloat(speed),
       source,
     });
 
