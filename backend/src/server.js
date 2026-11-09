@@ -13,6 +13,7 @@ import { fleetRouter } from './routes/fleet.js';
 import { dispatchRouter } from './routes/dispatch.js';
 import { driverOrderRouter } from './routes/driverOrders.js';
 import { notificationRouter } from './routes/notifications.js';
+import { pricingRouter } from './routes/pricing.js';
 import { acceptInvitation } from './controllers/companyUserController.js';
 import { verifyAccessToken } from './utils/jwt.js';
 import { User } from './models/User.js';
@@ -131,6 +132,7 @@ app.use('/api/orders', dispatchRouter);    // Chapter 7: dispatch actions on ord
 app.use('/api/driver/orders', driverOrderRouter);  // Chapter 7: driver portal
 app.use('/api/fleet', fleetRouter);
 app.use('/api/notifications', notificationRouter); // Chapter 9: persistent notifications
+app.use('/api/pricing', pricingRouter);             // Chapter 10: contracts & rate management
 app.post('/api/invitations/accept', acceptInvitation);
 
 app.get('/', (_req, res) => {

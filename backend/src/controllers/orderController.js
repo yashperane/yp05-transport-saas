@@ -5,6 +5,7 @@ import { generateOrderNumber } from '../services/orderNumberService.js';
 import { checkPossibleDuplicateOrder } from '../services/duplicateDetectionService.js';
 import { recordOrderHistory } from '../services/orderHistoryService.js';
 import { realtimeService } from '../services/realtimeService.js';
+import { pricingEngine, roundMoney } from '../services/pricingService.js';
 
 /**
  * POST /api/orders/check-duplicates
@@ -178,7 +179,73 @@ export const createOrder = async (req, res) => {
     // 4. Generate collision-safe Order Number
     const orderNumber = await generateOrderNumber(transportBusinessId);
 
-    // 5. Build and Save Order
+    // 5. Automatic Pricing Agreement Resolution (Chapter 10)
+    let resolvedPricing = {
+      pricingAgreementId: null,
+      pricingType: 'pending',
+      agreedRate: 0,
+      billableDistance: 0,
+      subtotal: 0,
+      finalAmount: 0,
+      pricingStatus: 'pending_review',
+      calculationBreakdown: 'Pending review by Transport Operator.',
+    };
+
+    if (companyId) {
+      const match = await pricingEngine.resolveAgreement({
+        transportBusinessId,
+        companyId,
+        pickupAddress,
+        destinationAddress,
+        vehicleType: requiredVehicleType,
+      });
+
+      if (match && match.agreement) {
+        const ag = match.agreement;
+        let rate = 0;
+        let type = ag.pricingType;
+
+        if (match.matchedRule?.type === 'route') {
+          rate = match.matchedRule.rule.rate;
+          type = match.matchedRule.rule.rateType === 'per_km' ? 'per_kilometre' : 'fixed_per_trip';
+        } else if (type === 'fixed_per_trip') {
+          rate = ag.fixedTripRate;
+        } else if (type === 'per_kilometre') {
+          rate = ag.perKilometreRate;
+        }
+
+        const calc = pricingEngine.calculate({
+          pricingType: type,
+          agreedRate: rate,
+          billableDistance: 0,
+        });
+
+        resolvedPricing = {
+          pricingAgreementId: ag._id,
+          pricingType: type,
+          agreedRate: rate,
+          billableDistance: 0,
+          subtotal: calc.subtotal,
+          finalAmount: calc.finalAmount,
+          calculationBreakdown: calc.calculationBreakdown,
+          pricingStatus: type === 'per_kilometre' ? 'pending_review' : 'calculated',
+          calculatedAt: new Date(),
+        };
+      }
+    }
+
+    // If owner/dispatcher provided manual pricing details in the request, prioritize it
+    if (['owner', 'dispatcher'].includes(userRole) && pricingDetails?.agreedAmount) {
+      resolvedPricing = {
+        ...resolvedPricing,
+        agreedRate: roundMoney(pricingDetails.agreedAmount),
+        finalAmount: roundMoney(pricingDetails.agreedAmount),
+        pricingStatus: 'manually_confirmed',
+        calculationBreakdown: 'Manually specified during order creation.',
+      };
+    }
+
+    // 6. Build and Save Order
     const newOrder = await Order.create({
       transportBusinessId,
       companyId: companyId || null,
@@ -207,7 +274,7 @@ export const createOrder = async (req, res) => {
       labourCount: Number(labourCount) || 0,
       requiredVehicleType: requiredVehicleType || 'pickup',
       specialInstructions: specialInstructions ? specialInstructions.trim() : '',
-      pricingDetails: ['owner', 'dispatcher'].includes(userRole) ? pricingDetails || {} : {},
+      pricingDetails: resolvedPricing,
       status: 'pending',
       duplicateReviewStatus: {
         isFlagged: dupCheck.isPossibleDuplicate,

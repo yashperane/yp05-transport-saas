@@ -138,20 +138,72 @@ const orderSchema = new mongoose.Schema(
       default: '',
     },
     pricingDetails: {
+      pricingAgreementId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PricingAgreement',
+        default: null,
+      },
       pricingType: {
         type: String,
-        enum: ['fixed_per_trip', 'per_kilometre', 'monthly_contract', 'custom', 'manual'],
-        default: 'manual',
+        enum: ['fixed_per_trip', 'per_kilometre', 'monthly_contract', 'custom', 'manual', 'pending'],
+        default: 'pending',
       },
-      estimatedAmount: {
+      agreedRate: {
         type: Number,
         default: 0,
         min: 0,
       },
-      agreedAmount: {
+      billableDistance: {
         type: Number,
         default: 0,
         min: 0,
+      },
+      distanceSource: {
+        type: String,
+        enum: ['manual_entry', 'system_calculated', 'not_applicable'],
+        default: 'not_applicable',
+      },
+      calculationBreakdown: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      subtotal: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      adjustment: {
+        type: Number,
+        default: 0,
+      },
+      discount: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      finalAmount: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      currency: {
+        type: String,
+        default: 'INR',
+      },
+      pricingStatus: {
+        type: String,
+        enum: ['pending_review', 'calculated', 'manually_confirmed', 'invoiced'],
+        default: 'pending_review',
+      },
+      calculatedAt: {
+        type: Date,
+        default: null,
+      },
+      calculatedByUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
       },
       pricingNotes: {
         type: String,

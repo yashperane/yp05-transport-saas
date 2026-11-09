@@ -8,6 +8,7 @@ import FleetHub from '../components/FleetHub.jsx';
 import DispatchCenter from '../components/DispatchCenter.jsx';
 import DriverPortal from '../components/DriverPortal.jsx';
 import NotificationCenter from '../components/NotificationCenter.jsx';
+import PricingManager from '../components/PricingManager.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
 import { 
   Truck, 
@@ -68,6 +69,7 @@ export default function DashboardLayout() {
     { id: 'driver-portal', label: 'Driver Portal', icon: Radio, show: isDriver },
     { id: 'dispatch', label: 'Dispatch Center', icon: Radio, show: isOwnerOrDispatcher },
     { id: 'orders', label: 'Orders', icon: ClipboardList, show: !isDriver },
+    { id: 'pricing', label: 'Pricing & Contracts', icon: Sparkles, show: isOwnerOrDispatcher },
     { id: 'fleet', label: 'Fleet & Drivers', icon: Truck, show: isOwnerOrDispatcher },
     { id: 'company-workspace', label: 'Workspace', icon: LayoutDashboard, show: isCompanyUser },
     { id: 'companies', label: 'Companies', icon: Building2, show: isOwnerOrDispatcher },
@@ -209,6 +211,10 @@ export default function DashboardLayout() {
 
         {activeTab === 'fleet' && isOwnerOrDispatcher && (
           <FleetHub />
+        )}
+
+        {activeTab === 'pricing' && isOwnerOrDispatcher && (
+          <PricingManager />
         )}
 
         {activeTab === 'company-workspace' && isCompanyUser && (
