@@ -47,15 +47,15 @@ export const toggleSharing = async (req, res) => {
     const { isSharing } = req.body;
 
     const driver = await Driver.findOne({ userId: driverUserId, transportBusinessId });
-    if (!driver || !driver.currentVehicleId) {
+    if (!driver) {
       return res.status(400).json({
         success: false,
-        error: { code: 'NO_ASSIGNED_VEHICLE', message: 'No vehicle assigned to driver.' },
+        error: { code: 'DRIVER_NOT_FOUND', message: 'Driver not found.' },
       });
     }
 
     const updated = await VehicleLocation.findOneAndUpdate(
-      { vehicleId: driver.currentVehicleId },
+      { driverId: driver._id },
       { $set: { isSharing: Boolean(isSharing) } },
       { new: true }
     );
@@ -92,7 +92,8 @@ export const getMyStatus = async (req, res) => {
     }
 
     let latestLocation = null;
-    if (driver.currentVehicleId) {
+    latestLocation = await VehicleLocation.findOne({ driverId: driver._id }).lean();
+    if (!latestLocation && driver.currentVehicleId) {
       latestLocation = await VehicleLocation.findOne({ vehicleId: driver.currentVehicleId._id }).lean();
     }
 

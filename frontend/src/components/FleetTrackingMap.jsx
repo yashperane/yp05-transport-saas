@@ -110,8 +110,8 @@ export default function FleetTrackingMap() {
   }, [socket]);
 
   const filteredVehicles = vehicles.filter((v) => {
-    const reg = v.vehicleId?.registrationNumber || '';
-    const driver = v.driverId?.fullName || '';
+    const reg = v.vehicleId?.registrationNumber || v.vehicleNumber || 'Driver GPS';
+    const driver = v.driverId?.fullName || v.driverName || '';
     const matchesSearch = reg.toLowerCase().includes(search.toLowerCase()) || driver.toLowerCase().includes(search.toLowerCase());
     if (statusFilter === 'active') return matchesSearch && !v.isStale;
     if (statusFilter === 'stale') return matchesSearch && v.isStale;
@@ -186,11 +186,11 @@ export default function FleetTrackingMap() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xs font-bold text-zinc-100">
-                        {v.vehicleId?.registrationNumber || 'Vehicle'}
+                        {v.vehicleId?.registrationNumber || v.vehicleNumber || 'Driver GPS'}
                       </p>
                       <p className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1">
                         <Truck className="w-3 h-3 text-zinc-500" />
-                        {v.driverId?.fullName || 'Assigned Driver'}
+                        {v.driverId?.fullName || v.driverName || 'Assigned Driver'}
                       </p>
                     </div>
                     <Badge variant={v.isStale ? 'warning' : 'success'}>
