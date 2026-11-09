@@ -58,6 +58,17 @@ export default function FleetTrackingMap() {
 
   useEffect(() => {
     loadFleet();
+    // Auto polling every 8 seconds as reliable backup to Socket.IO
+    const interval = setInterval(() => {
+      trackingApi.getFleetVehicles(token).then((data) => {
+        if (data && data.length > 0) {
+          setVehicles(data);
+          setSelectedVehicle((curr) => curr || data[0]);
+        }
+      }).catch(() => null);
+    }, 8000);
+
+    return () => clearInterval(interval);
   }, [token]);
 
   // Real-time location updates via Socket.IO

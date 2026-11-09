@@ -39,13 +39,29 @@ export const trackingService = {
     }
 
     // 2. Identify the driver and their assigned vehicle
-    const driver = await Driver.findOne({
+    let driver = await Driver.findOne({
       userId: driverUserId,
       transportBusinessId,
     }).populate('currentVehicleId');
 
+    // Fallback: If not found with tenant filter, find by userId directly
     if (!driver) {
-      throw new Error('Driver profile not found.');
+      driver = await Driver.findOne({ userId: driverUserId }).populate('currentVehicleId');
+    }
+
+    if (!driver) {
+      // If still not found, check User model and auto-link/create a Driver record
+      const user = await User.findById(driverUserId).lean();
+      if (!user) throw new Error('Driver profile not found.');
+
+      driver = await Driver.create({
+        transportBusinessId: user.transportBusinessId || transportBusinessId,
+        userId: user._id,
+        fullName: user.name || 'Driver',
+        phoneNumber: user.phone || '0000000000',
+        employmentStatus: 'active',
+        availabilityStatus: 'available',
+      });
     }
 
     const vehicle = driver.currentVehicleId;
