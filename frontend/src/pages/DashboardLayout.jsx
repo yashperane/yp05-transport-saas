@@ -10,6 +10,7 @@ import DriverPortal from '../components/DriverPortal.jsx';
 import NotificationCenter from '../components/NotificationCenter.jsx';
 import PricingManager from '../components/PricingManager.jsx';
 import BillingManager from '../components/BillingManager.jsx';
+import NotificationsPage from '../components/NotificationsPage.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
 import { 
   Truck, 
@@ -26,7 +27,8 @@ import {
   Menu,
   ChevronDown,
   Sparkles,
-  Receipt
+  Receipt,
+  Bell
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -73,6 +75,7 @@ export default function DashboardLayout() {
     { id: 'orders', label: 'Orders', icon: ClipboardList, show: !isDriver },
     { id: 'pricing', label: 'Contracts & Rates', icon: Sparkles, show: isOwnerOrDispatcher },
     { id: 'billing', label: 'Billing & Invoices', icon: Receipt, show: !isDriver },
+    { id: 'notifications', label: 'Notifications', icon: Bell, show: true },
     { id: 'fleet', label: 'Fleet & Drivers', icon: Truck, show: isOwnerOrDispatcher },
     { id: 'company-workspace', label: 'Workspace', icon: LayoutDashboard, show: isCompanyUser },
     { id: 'companies', label: 'Client Accounts', icon: Building2, show: isOwnerOrDispatcher },
@@ -81,13 +84,13 @@ export default function DashboardLayout() {
   ].filter((item) => item.show);
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#080B11] text-slate-100 flex flex-col font-sans">
       {/* Top Application Shell Header */}
-      <header className="border-b border-slate-800/80 bg-[#0F1623]/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
+      <header className="border-b border-slate-800/80 bg-[#0E131F]/90 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo & Product Brand Identity (Neutral) */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-600/30">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-600/30">
               <Truck className="w-4 h-4" />
             </div>
             <div>
@@ -145,7 +148,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* In-App Persistent Notifications */}
-            <NotificationCenter />
+            <NotificationCenter onOpenFullPage={() => setActiveTab('notifications')} />
 
             <div className="text-right hidden sm:block">
               <span className="text-xs font-medium text-slate-200 block">{user.name}</span>
@@ -222,6 +225,10 @@ export default function DashboardLayout() {
 
         {activeTab === 'billing' && !isDriver && (
           <BillingManager />
+        )}
+
+        {activeTab === 'notifications' && (
+          <NotificationsPage />
         )}
 
         {activeTab === 'company-workspace' && isCompanyUser && (

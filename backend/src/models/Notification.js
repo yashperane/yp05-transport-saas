@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 /**
- * Notification Schema
- * Scoped by transportBusinessId and recipient userId.
- * Supports persistent notifications across sessions and offline states.
+ * Enhanced Notification Schema for Chapter 12
+ * Supports multi-category (orders, dispatch, driver, billing, invoice, payment, company, system),
+ * delivery channels, and navigation linking.
  */
 const notificationSchema = new mongoose.Schema(
   {
@@ -25,9 +25,16 @@ const notificationSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    category: {
+      type: String,
+      enum: ['order', 'dispatch', 'driver', 'billing', 'company', 'system'],
+      default: 'system',
+      index: true,
+    },
     type: {
       type: String,
       enum: [
+        // Order events
         'order_created',
         'order_assigned',
         'order_available',
@@ -38,7 +45,21 @@ const notificationSchema = new mongoose.Schema(
         'order_completed',
         'order_cancelled',
         'order_reassigned',
+        'order_duplicate_warning',
+        // Driver events
         'driver_availability',
+        'driver_assigned',
+        // Billing events
+        'invoice_created',
+        'invoice_issued',
+        'invoice_cancelled',
+        'payment_recorded',
+        'payment_completed',
+        'invoice_overdue',
+        // Company events
+        'company_invited',
+        'company_invite_accepted',
+        // System
         'system',
       ],
       required: true,
@@ -47,13 +68,13 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
+      maxlength: 140,
     },
     message: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 500,
+      maxlength: 600,
     },
     relatedOrderId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -61,9 +82,15 @@ const notificationSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
-    metadata: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
+    relatedInvoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice',
+      default: null,
+      index: true,
+    },
+    actionUrl: {
+      type: String,
+      default: '',
     },
     isRead: {
       type: Boolean,
@@ -74,14 +101,24 @@ const notificationSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    deliveryChannels: {
+      type: [String],
+      enum: ['in_app', 'email', 'sms', 'whatsapp'],
+      default: ['in_app'],
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Compound indexes for fast querying of a user's recent notifications
+// Compound indexes
 notificationSchema.index({ recipientUserId: 1, isRead: 1, createdAt: -1 });
-notificationSchema.index({ transportBusinessId: 1, createdAt: -1 });
+notificationSchema.index({ transportBusinessId: 1, category: 1, createdAt: -1 });
+notificationSchema.index({ recipientUserId: 1, category: 1, createdAt: -1 });
 
 export const Notification = mongoose.model('Notification', notificationSchema);
