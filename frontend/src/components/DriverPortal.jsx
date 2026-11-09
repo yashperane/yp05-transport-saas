@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useSocket } from '../context/SocketContext.jsx';
 import { dispatchApi } from '../services/dispatchApi.js';
 import DriverOrderDetailModal from './DriverOrderDetailModal.jsx';
 import {
@@ -30,6 +31,7 @@ import {
 
 export default function DriverPortal() {
   const { token, user } = useAuth();
+  const { useSocketEvent } = useSocket();
   
   // Dashboard state
   const [summary, setSummary] = useState(null);
@@ -53,7 +55,6 @@ export default function DriverPortal() {
 
   // Fetch driver overview summary & orders
   const loadDashboardData = useCallback(async () => {
-    setLoading(true);
     try {
       const [sumRes, assignedRes, availRes] = await Promise.all([
         dispatchApi.getDriverSummary(token).catch(() => null),
@@ -74,6 +75,25 @@ export default function DriverPortal() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // Real-time socket events for driver (Chapter 9)
+  useSocketEvent('order:assigned', (payload) => {
+    showToast('info', `New order #${payload.orderNumber} assigned to you!`);
+    loadDashboardData();
+  });
+
+  useSocketEvent('order:available', (payload) => {
+    loadDashboardData();
+  });
+
+  useSocketEvent('order:cancelled', (payload) => {
+    showToast('error', `Order #${payload.orderNumber} has been cancelled.`);
+    loadDashboardData();
+  });
+
+  useSocketEvent('order:reassigned', (payload) => {
+    loadDashboardData();
+  });
 
   // Handle Availability Toggle (Available <-> Off Duty)
   const handleToggleAvailability = async () => {

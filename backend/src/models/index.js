@@ -10,6 +10,7 @@ import { OrderAssignmentHistory } from './OrderAssignmentHistory.js';
 import { VehicleLocationHistory } from './VehicleLocationHistory.js';
 import { Counter } from './Counter.js';
 import { VehicleAssignmentHistory } from './VehicleAssignmentHistory.js';
+import { Notification } from './Notification.js';
 
 export {
   TransportBusiness,
@@ -24,4 +25,5 @@ export {
   VehicleLocationHistory,
   Counter,
   VehicleAssignmentHistory,
+  Notification,
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useSocket } from '../context/SocketContext.jsx';
 import { orderApi } from '../services/orderApi.js';
 import { dispatchApi } from '../services/dispatchApi.js';
 import {
@@ -287,6 +288,7 @@ const AssignmentHistoryModal = ({ order, onClose, token }) => {
 // ─── Main Dispatch Center ────────────────────────────────────
 export default function DispatchCenter() {
   const { token } = useAuth();
+  const { useSocketEvent, connectionStatus } = useSocket();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -297,7 +299,6 @@ export default function DispatchCenter() {
   const [makingAvailable, setMakingAvailable] = useState('');
 
   const fetchOrders = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await orderApi.getOrders(token, {
         status: statusFilter || undefined,
@@ -313,6 +314,53 @@ export default function DispatchCenter() {
   }, [token, statusFilter, search]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // Real-time Socket Event Listeners for Dispatch Center (Chapter 9)
+  useSocketEvent('order:created', (payload) => {
+    showToast('info', `New order #${payload.orderNumber} received.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('order:available', (payload) => {
+    fetchOrders();
+  });
+
+  useSocketEvent('order:assigned', (payload) => {
+    fetchOrders();
+  });
+
+  useSocketEvent('order:claimed', (payload) => {
+    showToast('info', `Order #${payload.orderNumber} claimed by driver.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('order:accepted', (payload) => {
+    showToast('success', `Order #${payload.orderNumber} accepted by driver.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('order:rejected', (payload) => {
+    showToast('error', `Order #${payload.orderNumber} was rejected by driver.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('order:started', (payload) => {
+    fetchOrders();
+  });
+
+  useSocketEvent('order:completed', (payload) => {
+    showToast('success', `Order #${payload.orderNumber} marked completed.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('order:cancelled', (payload) => {
+    showToast('error', `Order #${payload.orderNumber} was cancelled.`);
+    fetchOrders();
+  });
+
+  useSocketEvent('driver:availability_updated', () => {
+    // Optionally trigger background refresh of driver lists
+  });
 
   const showToast = (type, msg) => {
     setToast({ type, msg });

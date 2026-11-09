@@ -4,6 +4,7 @@ import { OrderHistory } from '../models/OrderHistory.js';
 import { generateOrderNumber } from '../services/orderNumberService.js';
 import { checkPossibleDuplicateOrder } from '../services/duplicateDetectionService.js';
 import { recordOrderHistory } from '../services/orderHistoryService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 /**
  * POST /api/orders/check-duplicates
@@ -229,6 +230,38 @@ export const createOrder = async (req, res) => {
         companyId,
       },
       description: `Order ${orderNumber} created by ${req.user.name} (${userRole}) via ${creationSource}.`,
+    });
+
+    // 7. Real-Time Emission & Notification (Chapter 9)
+    const sanitizedOrderPayload = {
+      orderId: newOrder._id,
+      orderNumber: newOrder.orderNumber,
+      orderType: newOrder.orderType,
+      status: newOrder.status,
+      companyId: newOrder.companyId,
+      customerName: newOrder.customerName,
+      pickupLocation: newOrder.pickupLocation?.address,
+      destinationLocation: newOrder.destinationLocation?.address,
+      requiredDate: newOrder.requiredDate,
+      requiredVehicleType: newOrder.requiredVehicleType,
+      createdAt: newOrder.createdAt,
+    };
+
+    // Emit to management room (Owner & Dispatchers)
+    realtimeService.emitToTenant(transportBusinessId, 'order:created', sanitizedOrderPayload);
+
+    // Emit to company room if created on behalf of a company
+    if (newOrder.companyId) {
+      realtimeService.emitToCompany(newOrder.companyId, 'order:created', sanitizedOrderPayload);
+    }
+
+    // Persist notifications for staff
+    realtimeService.notifyBusinessStaff({
+      transportBusinessId,
+      type: 'order_created',
+      title: 'New Order Created',
+      message: `Order #${newOrder.orderNumber} was created by ${req.user.name}.`,
+      relatedOrderId: newOrder._id,
     });
 
     return res.status(201).json({
@@ -613,6 +646,35 @@ export const cancelOrder = async (req, res) => {
       previousValue: { status: previousStatus },
       newValue: { status: 'cancelled', reason: reason.trim() },
       description: `Order cancelled by ${req.user.name}. Reason: ${reason.trim()}`,
+    });
+
+    // Real-Time Emission & Notification (Chapter 9)
+    const cancelPayload = {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      status: 'cancelled',
+      reason: reason.trim(),
+      cancelledAt: order.cancelledAt,
+    };
+
+    realtimeService.emitToTenant(transportBusinessId, 'order:cancelled', cancelPayload);
+    if (order.companyId) {
+      realtimeService.emitToCompany(order.companyId, 'order:cancelled', cancelPayload);
+    }
+    if (order.assignedDriverId) {
+      // Find driver user ID if assigned
+      const driverDoc = await order.populate('assignedDriverId');
+      if (driverDoc.assignedDriverId?.userId) {
+        realtimeService.emitToDriver(driverDoc.assignedDriverId.userId, 'order:cancelled', cancelPayload);
+      }
+    }
+
+    realtimeService.notifyBusinessStaff({
+      transportBusinessId,
+      type: 'order_cancelled',
+      title: 'Order Cancelled',
+      message: `Order #${order.orderNumber} was cancelled. Reason: ${reason.trim()}`,
+      relatedOrderId: order._id,
     });
 
     return res.status(200).json({

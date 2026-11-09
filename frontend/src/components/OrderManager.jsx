@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useSocket } from '../context/SocketContext.jsx';
 import { orderApi } from '../services/orderApi.js';
 import { companyApi } from '../services/companyApi.js';
 import OrderStatusBadge from './OrderStatusBadge.jsx';
@@ -27,6 +28,7 @@ import {
 
 export default function OrderManager() {
   const { user, token } = useAuth();
+  const { useSocketEvent } = useSocket();
   const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
   const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
 
@@ -62,6 +64,32 @@ export default function OrderManager() {
       loadCompaniesDropdown();
     }
   }, [statusFilter, orderTypeFilter, companyFilter]);
+
+  // Real-time Socket Event Listeners for OrderManager (Chapter 9)
+  useSocketEvent('order:created', () => {
+    fetchOrders(pagination.page);
+    fetchSummary();
+  });
+
+  useSocketEvent('order:accepted', () => {
+    fetchOrders(pagination.page);
+    fetchSummary();
+  });
+
+  useSocketEvent('order:started', () => {
+    fetchOrders(pagination.page);
+    fetchSummary();
+  });
+
+  useSocketEvent('order:completed', () => {
+    fetchOrders(pagination.page);
+    fetchSummary();
+  });
+
+  useSocketEvent('order:cancelled', () => {
+    fetchOrders(pagination.page);
+    fetchSummary();
+  });
 
   const loadCompaniesDropdown = async () => {
     try {

@@ -7,6 +7,7 @@ import { Vehicle } from '../models/Vehicle.js';
 import { TransportBusiness } from '../models/TransportBusiness.js';
 import { OrderAssignmentHistory } from '../models/OrderAssignmentHistory.js';
 import { OrderHistory } from '../models/OrderHistory.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 const getDriverForUser = async (userId, transportBusinessId) => {
   return Driver.findOne({ userId, transportBusinessId });
@@ -139,6 +140,14 @@ export const updateSelfAvailability = async (req, res) => {
 
     driver.availabilityStatus = availabilityStatus;
     await driver.save();
+
+    // Emit live availability event (Chapter 9)
+    realtimeService.emitToTenant(transportBusinessId, 'driver:availability_updated', {
+      driverId: driver._id,
+      driverName: `${driver.firstName} ${driver.lastName}`,
+      availabilityStatus: driver.availabilityStatus,
+      updatedAt: new Date(),
+    });
 
     return res.status(200).json({
       success: true,

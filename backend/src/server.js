@@ -12,6 +12,7 @@ import { orderRouter } from './routes/order.js';
 import { fleetRouter } from './routes/fleet.js';
 import { dispatchRouter } from './routes/dispatch.js';
 import { driverOrderRouter } from './routes/driverOrders.js';
+import { notificationRouter } from './routes/notifications.js';
 import { acceptInvitation } from './controllers/companyUserController.js';
 import { verifyAccessToken } from './utils/jwt.js';
 import { User } from './models/User.js';
@@ -74,7 +75,7 @@ io.use(async (socket, next) => {
       return next(new Error('SOCKET_UNAUTHORIZED: Invalid or expired token.'));
     }
 
-    const user = await User.findById(decoded.userId).select('_id role transportBusinessId status').lean();
+    const user = await User.findById(decoded.userId).select('_id role transportBusinessId companyId status').lean();
     if (!user || user.status !== 'active') {
       return next(new Error('SOCKET_UNAUTHORIZED: User account invalid or inactive.'));
     }
@@ -83,6 +84,7 @@ io.use(async (socket, next) => {
     socket.userId = user._id.toString();
     socket.role = user.role;
     socket.transportBusinessId = user.transportBusinessId?.toString() || null;
+    socket.companyId = user.companyId?.toString() || null;
 
     next();
   } catch (err) {
@@ -93,14 +95,26 @@ io.use(async (socket, next) => {
 io.on('connection', (socket) => {
   console.log(`⚡ Authenticated socket connected: ${socket.id} [${socket.role}]`);
 
-  // Join tenant-scoped room (broadcasts to all business staff)
-  if (socket.transportBusinessId) {
+  // 1. Join user-specific private room for targeted notifications
+  socket.join(`user:${socket.userId}`);
+
+  // 2. Join tenant-scoped room (for owners & dispatchers)
+  if (socket.transportBusinessId && ['owner', 'dispatcher'].includes(socket.role)) {
     socket.join(`tenant:${socket.transportBusinessId}`);
   }
 
-  // Join private driver room (for direct order assignment notifications)
+  // 3. Join private driver room (for direct order assignment & claim notifications)
   if (socket.role === 'driver') {
     socket.join(`driver:${socket.userId}`);
+    // If tenant-level driver self-claim is permitted, driver also listens to available orders on tenant
+    if (socket.transportBusinessId) {
+      socket.join(`driver-feed:${socket.transportBusinessId}`);
+    }
+  }
+
+  // 4. Join company-specific room (for company admin & company employee)
+  if (socket.companyId && ['company_admin', 'company_employee'].includes(socket.role)) {
+    socket.join(`company:${socket.companyId}`);
   }
 
   socket.on('disconnect', () => {
@@ -116,6 +130,7 @@ app.use('/api/orders', orderRouter);
 app.use('/api/orders', dispatchRouter);    // Chapter 7: dispatch actions on order IDs
 app.use('/api/driver/orders', driverOrderRouter);  // Chapter 7: driver portal
 app.use('/api/fleet', fleetRouter);
+app.use('/api/notifications', notificationRouter); // Chapter 9: persistent notifications
 app.post('/api/invitations/accept', acceptInvitation);
 
 app.get('/', (_req, res) => {

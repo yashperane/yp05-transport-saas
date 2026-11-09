@@ -7,6 +7,8 @@ import OrderManager from '../components/OrderManager.jsx';
 import FleetHub from '../components/FleetHub.jsx';
 import DispatchCenter from '../components/DispatchCenter.jsx';
 import DriverPortal from '../components/DriverPortal.jsx';
+import NotificationCenter from '../components/NotificationCenter.jsx';
+import { useSocket } from '../context/SocketContext.jsx';
 import { 
   Truck, 
   Users, 
@@ -26,6 +28,7 @@ import {
 
 export default function DashboardLayout() {
   const { user, token, logout } = useAuth();
+  const { connectionStatus } = useSocket();
   
   const isOwnerOrDispatcher = ['owner', 'dispatcher'].includes(user?.role);
   const isCompanyUser = ['company_admin', 'company_employee'].includes(user?.role);
@@ -117,8 +120,28 @@ export default function DashboardLayout() {
             })}
           </nav>
 
-          {/* User profile & Sign Out */}
+          {/* User profile, Notifications & Sign Out */}
           <div className="flex items-center gap-3">
+            {/* Live Socket Status Dot */}
+            <div
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px]"
+              title={`Real-time sync: ${connectionStatus}`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  connectionStatus === 'connected'
+                    ? 'bg-emerald-400 ring-2 ring-emerald-500/20'
+                    : connectionStatus === 'connecting'
+                    ? 'bg-amber-400 animate-pulse'
+                    : 'bg-red-400'
+                }`}
+              />
+              <span className="hidden sm:inline text-slate-400 capitalize">{connectionStatus}</span>
+            </div>
+
+            {/* In-App Persistent Notifications */}
+            <NotificationCenter />
+
             <div className="text-right hidden sm:block">
               <span className="text-xs font-medium text-slate-200 block">{user.name}</span>
               <span className="text-[11px] text-slate-400 block font-mono">{user.email}</span>

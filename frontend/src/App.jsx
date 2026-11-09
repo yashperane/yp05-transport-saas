@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { SocketProvider } from './context/SocketContext.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import DashboardLayout from './pages/DashboardLayout.jsx';
 import { Activity } from 'lucide-react';
@@ -22,7 +23,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <SocketProvider>
+        <AppContent />
+      </SocketProvider>
     </AuthProvider>
   );
 }
