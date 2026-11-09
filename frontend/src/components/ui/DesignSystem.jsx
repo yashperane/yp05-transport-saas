@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertCircle, Inbox } from 'lucide-react';
+import { Loader2, AlertCircle, Inbox, X } from 'lucide-react';
 
 /**
  * Enterprise Design System Primitives
@@ -8,7 +8,7 @@ import { Loader2, AlertCircle, Inbox } from 'lucide-react';
 
 export const Card = ({ children, className = '', header, footer, ...props }) => (
   <div className={`bg-slate-900/90 border border-slate-800 rounded-xl shadow-sm hover:border-slate-700/80 transition-colors ${className}`} {...props}>
-    {header && <div className="px-5 py-4 border-b border-slate-800/80 font-medium text-slate-200 text-sm">{header}</div>}
+    {header && <div className="px-5 py-4 border-b border-slate-800/80 font-medium text-slate-200 text-sm flex items-center justify-between">{header}</div>}
     <div className="p-5">{children}</div>
     {footer && <div className="px-5 py-3 border-t border-slate-800/80 bg-slate-950/40 rounded-b-xl">{footer}</div>}
   </div>
@@ -89,12 +89,31 @@ export const Badge = ({ children, variant = 'default', className = '' }) => {
     warning: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
     danger: 'bg-red-500/10 text-red-400 border-red-500/30',
     purple: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+    teal: 'bg-teal-500/10 text-teal-400 border-teal-500/30',
   };
 
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${variants[variant] || variants.default} ${className}`}>
       {children}
     </span>
+  );
+};
+
+export const Modal = ({ isOpen, onClose, title, children, footer, maxWidth = 'max-w-lg' }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className={`w-full ${maxWidth} bg-slate-900 border border-slate-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden`}>
+        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5 overflow-y-auto space-y-4">{children}</div>
+        {footer && <div className="px-5 py-3 border-t border-slate-800 bg-slate-950/50 flex items-center justify-end gap-2.5">{footer}</div>}
+      </div>
+    </div>
   );
 };
 
@@ -119,6 +138,32 @@ export const LoadingSkeleton = ({ count = 3, className = '' }) => (
   <div className={`space-y-3 ${className}`}>
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="h-16 bg-slate-800/40 border border-slate-800/60 rounded-xl animate-pulse" />
+    ))}
+  </div>
+);
+
+export const TableSkeleton = ({ rows = 5, cols = 4 }) => (
+  <div className="w-full bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden animate-pulse">
+    <div className="h-10 bg-slate-800/50 border-b border-slate-800" />
+    <div className="divide-y divide-slate-800/60">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="flex items-center gap-4 px-4 py-3.5">
+          {Array.from({ length: cols }).map((_, c) => (
+            <div key={c} className="h-4 bg-slate-800/60 rounded flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const MetricsSkeleton = ({ count = 4 }) => (
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="h-24 bg-slate-900/70 border border-slate-800 rounded-xl p-4 animate-pulse">
+        <div className="h-3 w-16 bg-slate-800 rounded mb-2" />
+        <div className="h-7 w-12 bg-slate-800 rounded" />
+      </div>
     ))}
   </div>
 );
