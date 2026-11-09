@@ -200,7 +200,7 @@ export default function PricingManager() {
                   <h3 className="text-sm font-semibold text-slate-100">{ag.agreementName}</h3>
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
                     <Building2 className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{ag.companyId?.name || 'Unknown Company'}</span>
+                    <span>{ag.companyId?.companyName || ag.companyId?.name || 'Unknown Company'}</span>
                   </div>
                 </div>
                 <Badge variant={ag.status === 'active' ? 'success' : 'default'}>
@@ -263,7 +263,7 @@ export default function PricingManager() {
             <option value="">Select a company...</option>
             {companies.map((c) => (
               <option key={c._id} value={c._id}>
-                {c.name}
+                {c.companyName || c.name} {c.companyCode ? `(${c.companyCode})` : ''}
               </option>
             ))}
           </Select>

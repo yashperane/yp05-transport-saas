@@ -24,7 +24,7 @@ export const getAgreements = async (req, res) => {
     }
 
     const agreements = await PricingAgreement.find(query)
-      .populate('companyId', 'name contactPerson phone email')
+      .populate('companyId', 'companyName companyCode contactPerson phone email')
       .sort({ createdAt: -1 })
       .lean();
 
