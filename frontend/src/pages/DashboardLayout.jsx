@@ -87,23 +87,23 @@ export default function DashboardLayout() {
   ].filter((item) => item.show);
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-zinc-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#181E29] text-slate-100 flex flex-col font-sans">
       {/* Top Application Shell Header */}
-      <header className="border-b border-zinc-800/80 bg-[#0C1017]/90 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
+      <header className="border-b border-slate-700/60 bg-[#222B38]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo & Product Brand Identity (Neutral) */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-600/30">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-600/30">
               <Truck className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold tracking-tight text-zinc-100">Transport SaaS Project</span>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${roleBadgeStyles[user.role] || 'bg-zinc-800 text-zinc-400'}`}>
+                <span className="text-xs font-semibold tracking-tight text-slate-100">Transport SaaS Project</span>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${roleBadgeStyles[user.role] || 'bg-slate-700 text-slate-300'}`}>
                   {user.role}
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400 leading-none mt-0.5">
+              <p className="text-[11px] text-slate-400 leading-none mt-0.5">
                 {user.businessName || 'Sherkar Transport'} {user.companyName ? `• ${user.companyName}` : ''}
               </p>
             </div>

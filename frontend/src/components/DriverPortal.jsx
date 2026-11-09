@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
 import { dispatchApi } from '../services/dispatchApi.js';
+import { trackingApi } from '../services/trackingApi.js';
 import DriverOrderDetailModal from './DriverOrderDetailModal.jsx';
 import {
   Card,
@@ -26,7 +27,9 @@ import {
   ChevronRight,
   Eye,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Navigation,
+  Radio
 } from 'lucide-react';
 
 export default function DriverPortal() {
@@ -41,6 +44,12 @@ export default function DriverPortal() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [togglingAvailability, setTogglingAvailability] = useState(false);
+
+  // GPS Telemetry State (Chapter 13/14)
+  const [isGpsSharing, setIsGpsSharing] = useState(false);
+  const [currentCoords, setCurrentCoords] = useState(null);
+  const [gpsError, setGpsError] = useState(null);
+  const watchIdRef = useRef(null);
   
   // Modals & toasts
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -75,6 +84,64 @@ export default function DriverPortal() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // GPS Browser Geolocation Watcher
+  const startGpsSharing = () => {
+    if (!('geolocation' in navigator)) {
+      setGpsError('Geolocation is not supported by your browser.');
+      showToast('error', 'Browser does not support GPS.');
+      return;
+    }
+
+    setGpsError(null);
+    setIsGpsSharing(true);
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy, heading, speed } = pos.coords;
+        setCurrentCoords({ latitude, longitude });
+        try {
+          await trackingApi.updateLocation(token, {
+            latitude,
+            longitude,
+            accuracy,
+            heading,
+            speed,
+            source: 'driver_mobile_browser',
+          });
+        } catch (err) {
+          console.warn('[DriverGPS] Update error:', err.message);
+        }
+      },
+      (err) => {
+        setGpsError(err.message);
+        setIsGpsSharing(false);
+        showToast('error', `GPS Error: ${err.message}`);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+      }
+    );
+  };
+
+  const stopGpsSharing = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setIsGpsSharing(false);
+    trackingApi.toggleSharing(token, false).catch(() => null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   // Real-time socket events for driver (Chapter 9)
   useSocketEvent('order:assigned', (payload) => {
@@ -197,8 +264,17 @@ export default function DriverPortal() {
             </p>
           </div>
 
-          {/* Quick Availability Switch */}
-          <div className="flex items-center gap-2.5">
+          {/* Quick Availability Switch & GPS Switch */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant={isGpsSharing ? 'emerald' : 'outline'}
+              size="sm"
+              icon={Radio}
+              onClick={isGpsSharing ? stopGpsSharing : startGpsSharing}
+            >
+              {isGpsSharing ? 'Broadcasting GPS' : 'Start GPS Sharing'}
+            </Button>
+
             <Button
               variant={isAvailable ? 'secondary' : 'primary'}
               size="sm"
@@ -222,6 +298,16 @@ export default function DriverPortal() {
         </div>
 
         {/* Real Metrics Banner */}
+        {isGpsSharing && currentCoords && (
+          <div className="mt-3 p-2.5 bg-emerald-950/40 border border-emerald-600/40 rounded-lg flex items-center justify-between text-xs text-emerald-300">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Live GPS Active: {currentCoords.latitude.toFixed(4)}, {currentCoords.longitude.toFixed(4)}</span>
+            </div>
+            <span className="text-[11px] font-mono text-emerald-400">Broadcasting to Fleet</span>
+          </div>
+        )}
+
         {summary?.metrics && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-800/80">
             <div className="p-2.5 bg-slate-950/40 rounded-lg border border-slate-800/60">

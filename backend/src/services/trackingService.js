@@ -48,11 +48,8 @@ export const trackingService = {
       throw new Error('Driver profile not found.');
     }
 
-    if (!driver.currentVehicleId) {
-      throw new Error('No active vehicle assigned to driver.');
-    }
-
-    const vehicleId = driver.currentVehicleId._id;
+    const vehicle = driver.currentVehicleId;
+    const vehicleId = vehicle?._id || null;
 
     // 3. Find if driver currently has an in_progress or assigned order
     const activeOrder = await Order.findOne({
@@ -63,9 +60,9 @@ export const trackingService = {
 
     const recordedAt = new Date();
 
-    // 4. Update the latest VehicleLocation snapshot
+    // 4. Update the latest VehicleLocation snapshot by driverId (upsert)
     const latestLocation = await VehicleLocation.findOneAndUpdate(
-      { vehicleId },
+      { driverId: driver._id },
       {
         $set: {
           transportBusinessId,
@@ -101,8 +98,10 @@ export const trackingService = {
 
     // 6. Broadcast real-time location payload
     const telemetryPayload = {
-      vehicleId,
-      vehicleNumber: driver.currentVehicleId.registrationNumber || driver.currentVehicleId.vehicleNumber,
+      locationId: latestLocation._id,
+      driverId: driver._id,
+      vehicleId: vehicleId,
+      vehicleNumber: vehicle?.registrationNumber || vehicle?.vehicleNumber || 'Driver GPS',
       driverName: driver.fullName,
       latitude,
       longitude,

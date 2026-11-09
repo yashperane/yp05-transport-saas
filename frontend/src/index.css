@@ -6,24 +6,24 @@
   :root {
     color-scheme: dark;
 
-    /* Carbon & Cyber Emerald Design Tokens (Chapter 13) */
-    --bg-page: #05070B;
-    --bg-surface: #0C1017;
-    --bg-surface-elevated: #121824;
-    --bg-input: #040608;
+    /* Balanced Medium-Tone Industrial Slate Design Tokens (Chapter 14) */
+    --bg-page: #181E29;
+    --bg-surface: #222B38;
+    --bg-surface-elevated: #283344;
+    --bg-input: #131720;
 
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.10);
-    --border-strong: rgba(255, 255, 255, 0.20);
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --border-default: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(255, 255, 255, 0.22);
 
-    --primary-main: #10B981;
-    --primary-hover: #059669;
-    --primary-active: #047857;
-    --primary-subtle: rgba(16, 185, 129, 0.12);
+    --primary-main: #3B82F6;
+    --primary-hover: #2563EB;
+    --primary-active: #1D4ED8;
+    --primary-subtle: rgba(59, 130, 246, 0.15);
 
-    --text-primary: #F9FAFB;
-    --text-secondary: #D1D5DB;
-    --text-muted: #6B7280;
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
   }
   
   body {
@@ -34,7 +34,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Custom high-contrast scrollbar */
+  /* Custom balanced scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -43,10 +43,10 @@
     background: var(--bg-page);
   }
   ::-webkit-scrollbar-thumb {
-    background: #1F2937;
+    background: #334155;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #374151;
+    background: #475569;
   }
 }

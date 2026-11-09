@@ -64,23 +64,45 @@ export default function FleetTrackingMap() {
   useEffect(() => {
     if (!socket) return;
     const handleLocationUpdate = (telemetry) => {
-      setVehicles((prev) =>
-        prev.map((v) => {
-          if (v.vehicleId?._id === telemetry.vehicleId || v.vehicleId === telemetry.vehicleId) {
-            return {
-              ...v,
-              latitude: telemetry.latitude,
-              longitude: telemetry.longitude,
-              speed: telemetry.speed,
-              heading: telemetry.heading,
-              accuracy: telemetry.accuracy,
-              recordedAt: telemetry.recordedAt,
-              isStale: false,
-            };
-          }
-          return v;
-        })
-      );
+      setVehicles((prev) => {
+        const matchIndex = prev.findIndex(
+          (v) =>
+            (telemetry.vehicleId && (v.vehicleId?._id === telemetry.vehicleId || v.vehicleId === telemetry.vehicleId)) ||
+            (telemetry.driverId && (v.driverId?._id === telemetry.driverId || v.driverId === telemetry.driverId))
+        );
+
+        if (matchIndex >= 0) {
+          const updated = [...prev];
+          updated[matchIndex] = {
+            ...updated[matchIndex],
+            latitude: telemetry.latitude,
+            longitude: telemetry.longitude,
+            speed: telemetry.speed,
+            heading: telemetry.heading,
+            accuracy: telemetry.accuracy,
+            recordedAt: telemetry.recordedAt,
+            isStale: false,
+          };
+          return updated;
+        }
+
+        // If not already in list, append live broadcasting vehicle
+        return [
+          {
+            _id: telemetry.locationId || Math.random().toString(),
+            vehicleId: telemetry.vehicleId ? { registrationNumber: telemetry.vehicleNumber, _id: telemetry.vehicleId } : { registrationNumber: telemetry.vehicleNumber || 'Driver GPS' },
+            driverId: { fullName: telemetry.driverName, _id: telemetry.driverId },
+            latitude: telemetry.latitude,
+            longitude: telemetry.longitude,
+            speed: telemetry.speed,
+            heading: telemetry.heading,
+            accuracy: telemetry.accuracy,
+            recordedAt: telemetry.recordedAt,
+            isStale: false,
+          },
+          ...prev,
+        ];
+      });
     };
 
     socket.on('location:updated', handleLocationUpdate);

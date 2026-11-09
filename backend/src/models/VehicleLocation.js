@@ -16,8 +16,7 @@ const vehicleLocationSchema = new mongoose.Schema(
     vehicleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Vehicle',
-      required: true,
-      unique: true,
+      default: null,
       index: true,
     },
     driverId: {
