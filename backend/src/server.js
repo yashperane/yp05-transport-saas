@@ -16,6 +16,8 @@ import { notificationRouter } from './routes/notifications.js';
 import { pricingRouter } from './routes/pricing.js';
 import { billingRouter } from './routes/billing.js';
 import { reportRouter } from './routes/reports.js';
+import { locationRouter } from './routes/location.js';
+import { trackingRouter } from './routes/tracking.js';
 import { acceptInvitation } from './controllers/companyUserController.js';
 import { verifyAccessToken } from './utils/jwt.js';
 import { User } from './models/User.js';
@@ -137,6 +139,8 @@ app.use('/api/notifications', notificationRouter); // Chapter 9: persistent noti
 app.use('/api/pricing', pricingRouter);             // Chapter 10: contracts & rate management
 app.use('/api/invoices', billingRouter);            // Chapter 11: invoices & payments
 app.use('/api/reports', reportRouter);              // Chapter 11: financial reports
+app.use('/api/location', locationRouter);           // Chapter 13: driver location updates
+app.use('/api/tracking', trackingRouter);           // Chapter 13: live fleet tracking & history
 app.post('/api/invitations/accept', acceptInvitation);
 
 app.get('/', (_req, res) => {

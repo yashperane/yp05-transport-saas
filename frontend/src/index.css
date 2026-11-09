@@ -6,24 +6,24 @@
   :root {
     color-scheme: dark;
 
-    /* Nordic Sapphire Design Tokens */
-    --bg-page: #080B11;
-    --bg-surface: #0E131F;
-    --bg-surface-elevated: #141A29;
-    --bg-input: #06080D;
+    /* Carbon & Cyber Emerald Design Tokens (Chapter 13) */
+    --bg-page: #05070B;
+    --bg-surface: #0C1017;
+    --bg-surface-elevated: #121824;
+    --bg-input: #040608;
 
-    --border-subtle: rgba(148, 163, 184, 0.08);
-    --border-default: rgba(148, 163, 184, 0.15);
-    --border-strong: rgba(148, 163, 184, 0.25);
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.20);
 
-    --primary-main: #2563EB;
-    --primary-hover: #3B82F6;
-    --primary-active: #1D4ED8;
-    --primary-subtle: rgba(37, 99, 235, 0.12);
+    --primary-main: #10B981;
+    --primary-hover: #059669;
+    --primary-active: #047857;
+    --primary-subtle: rgba(16, 185, 129, 0.12);
 
-    --text-primary: #F8FAFC;
-    --text-secondary: #CBD5E1;
-    --text-muted: #64748B;
+    --text-primary: #F9FAFB;
+    --text-secondary: #D1D5DB;
+    --text-muted: #6B7280;
   }
   
   body {
@@ -43,10 +43,10 @@
     background: var(--bg-page);
   }
   ::-webkit-scrollbar-thumb {
-    background: #1E293B;
+    background: #1F2937;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #374151;
   }
 }
