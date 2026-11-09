@@ -58,33 +58,33 @@ export default function DashboardLayout() {
 
   const roleBadgeStyles = {
     super_admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    owner: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    dispatcher: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    owner: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    dispatcher: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
     driver: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     company_admin: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    company_employee: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+    company_employee: 'bg-slate-800 text-slate-300 border-slate-700/60',
   };
 
   const navItems = [
-    { id: 'driver-portal', label: 'Driver Portal', icon: Radio, show: isDriver },
+    { id: 'driver-portal', label: 'Driver Dashboard', icon: Truck, show: isDriver },
     { id: 'dispatch', label: 'Dispatch Center', icon: Radio, show: isOwnerOrDispatcher },
     { id: 'orders', label: 'Orders', icon: ClipboardList, show: !isDriver },
-    { id: 'pricing', label: 'Pricing & Contracts', icon: Sparkles, show: isOwnerOrDispatcher },
+    { id: 'pricing', label: 'Contracts & Rates', icon: Sparkles, show: isOwnerOrDispatcher },
     { id: 'fleet', label: 'Fleet & Drivers', icon: Truck, show: isOwnerOrDispatcher },
     { id: 'company-workspace', label: 'Workspace', icon: LayoutDashboard, show: isCompanyUser },
-    { id: 'companies', label: 'Companies', icon: Building2, show: isOwnerOrDispatcher },
+    { id: 'companies', label: 'Client Accounts', icon: Building2, show: isOwnerOrDispatcher },
     { id: 'profile', label: 'Profile', icon: ShieldCheck, show: true },
     { id: 'rbac-test', label: 'RBAC Matrix', icon: Activity, show: true },
   ].filter((item) => item.show);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-white">
+    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col font-sans">
       {/* Top Application Shell Header */}
-      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
+      <header className="border-b border-slate-800/80 bg-[#0F1623]/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo & Product Brand Identity (Neutral) */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-sm shadow-sky-600/30">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-600/30">
               <Truck className="w-4 h-4" />
             </div>
             <div>
@@ -109,10 +109,10 @@ export default function DashboardLayout() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     isActive 
-                      ? 'bg-slate-800 text-white' 
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                      ? 'bg-slate-800/90 text-white shadow-sm border border-slate-700/60' 
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-3">
             {/* Live Socket Status Dot */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px]"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#090D14] border border-slate-800 text-[11px]"
               title={`Real-time sync: ${connectionStatus}`}
             >
               <span
@@ -135,7 +135,7 @@ export default function DashboardLayout() {
                     ? 'bg-emerald-400 ring-2 ring-emerald-500/20'
                     : connectionStatus === 'connecting'
                     ? 'bg-amber-400 animate-pulse'
-                    : 'bg-red-400'
+                    : 'bg-rose-400'
                 }`}
               />
               <span className="hidden sm:inline text-slate-400 capitalize">{connectionStatus}</span>
@@ -151,7 +151,7 @@ export default function DashboardLayout() {
 
             <button
               onClick={logout}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-950/20 hover:border-red-900/40 transition"
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border border-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 hover:border-rose-900/40 transition"
               title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />
