@@ -28,6 +28,7 @@ export const trackingService = {
     accuracy = null,
     heading = null,
     speed = null,
+    address = '',
     source = 'driver_mobile_browser',
   }) {
     // 1. Validate coordinates range
@@ -90,6 +91,7 @@ export const trackingService = {
           accuracy,
           heading,
           speed,
+          address: address || '',
           isSharing: true,
           recordedAt,
           source,
@@ -124,6 +126,7 @@ export const trackingService = {
       heading,
       speed,
       accuracy,
+      address: address || '',
       recordedAt,
       isStale: false,
       activeOrder: activeOrder

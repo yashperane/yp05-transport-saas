@@ -70,6 +70,11 @@ const vehicleLocationSchema = new mongoose.Schema(
       enum: ['driver_mobile_browser', 'driver_app', 'hardware_gps'],
       default: 'driver_mobile_browser',
     },
+    address: {
+      type: String,
+      default: '',
+      trim: true,
+    },
   },
   {
     timestamps: true,

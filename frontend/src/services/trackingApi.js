@@ -10,11 +10,11 @@ export const trackingApi = {
   /**
    * Driver submits real-time GPS telemetry coordinate
    */
-  async updateLocation(token, { latitude, longitude, accuracy, heading, speed, source = 'driver_mobile_browser' }) {
+  async updateLocation(token, { latitude, longitude, accuracy, heading, speed, address, source = 'driver_mobile_browser' }) {
     const res = await fetch(`${API_URL}/api/location/update`, {
       method: 'POST',
       headers: getAuthHeaders(token),
-      body: JSON.stringify({ latitude, longitude, accuracy, heading, speed, source }),
+      body: JSON.stringify({ latitude, longitude, accuracy, heading, speed, address, source }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error?.message || 'Failed to update GPS location');

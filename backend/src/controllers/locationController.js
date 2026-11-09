@@ -10,7 +10,7 @@ export const updateLocation = async (req, res) => {
   try {
     const driverUserId = req.user._id;
     const transportBusinessId = req.user.transportBusinessId;
-    const { latitude, longitude, accuracy, heading, speed, source } = req.body;
+    const { latitude, longitude, accuracy, heading, speed, address, source } = req.body;
 
     const parseSafeFloat = (val) => {
       if (val === null || val === undefined || val === '') return null;
@@ -26,6 +26,7 @@ export const updateLocation = async (req, res) => {
       accuracy: parseSafeFloat(accuracy),
       heading: parseSafeFloat(heading),
       speed: parseSafeFloat(speed),
+      address: address || '',
       source,
     });
 

@@ -209,15 +209,23 @@ export default function FleetTrackingMap() {
                     </Badge>
                   </div>
 
-                  <div className="mt-2.5 pt-2 border-t border-zinc-800/60 flex items-center justify-between text-[11px]">
-                    <span className="text-zinc-500 flex items-center gap-1 font-mono">
-                      <Compass className="w-3 h-3" />
-                      {v.latitude.toFixed(4)}, {v.longitude.toFixed(4)}
-                    </span>
-                    <span className="text-zinc-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(v.recordedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                  <div className="mt-2.5 pt-2 border-t border-zinc-800/60 space-y-1 text-[11px]">
+                    {v.address && (
+                      <p className="text-zinc-300 flex items-center gap-1 truncate font-sans">
+                        <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                        {v.address}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between text-zinc-500">
+                      <span className="flex items-center gap-1 font-mono">
+                        <Compass className="w-3 h-3" />
+                        {v.latitude.toFixed(4)}, {v.longitude.toFixed(4)}
+                      </span>
+                      <span className="text-zinc-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(v.recordedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -261,12 +269,18 @@ export default function FleetTrackingMap() {
 
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-100">
-                    {selectedVehicle.vehicleId?.registrationNumber}
+                    {selectedVehicle.vehicleId?.registrationNumber || selectedVehicle.vehicleNumber || 'Driver GPS'}
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Driver: <span className="text-emerald-400 font-medium">{selectedVehicle.driverId?.fullName}</span>
+                    Driver: <span className="text-emerald-400 font-medium">{selectedVehicle.driverId?.fullName || selectedVehicle.driverName}</span>
                   </p>
-                  <p className="text-[11px] font-mono text-zinc-500">
+                  {selectedVehicle.address && (
+                    <p className="text-xs text-zinc-200 max-w-md mx-auto pt-1 flex items-center justify-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{selectedVehicle.address}</span>
+                    </p>
+                  )}
+                  <p className="text-[11px] font-mono text-zinc-500 pt-1">
                     Lat: {selectedVehicle.latitude} • Lng: {selectedVehicle.longitude}
                   </p>
                   {selectedVehicle.activeOrderId && (

@@ -85,6 +85,17 @@ export default function DriverPortal() {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  // Reverse geocoding helper (100% Free OpenStreetMap Nominatim)
+  const fetchAddress = async (lat, lon) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      return data.display_name || '';
+    } catch {
+      return '';
+    }
+  };
+
   // GPS Browser Geolocation Watcher
   const startGpsSharing = () => {
     if (!('geolocation' in navigator)) {
@@ -96,10 +107,25 @@ export default function DriverPortal() {
     setGpsError(null);
     setIsGpsSharing(true);
 
+    let lastGeocodeTime = 0;
+    let cachedAddress = '';
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (pos) => {
         const { latitude, longitude, accuracy, heading, speed } = pos.coords;
-        setCurrentCoords({ latitude, longitude });
+        setCurrentCoords({ latitude, longitude, address: cachedAddress });
+
+        // Throttle reverse geocoding to once every 30 seconds to respect free usage
+        if (Date.now() - lastGeocodeTime > 30000) {
+          lastGeocodeTime = Date.now();
+          fetchAddress(latitude, longitude).then((addr) => {
+            if (addr) {
+              cachedAddress = addr;
+              setCurrentCoords((prev) => ({ ...prev, address: addr }));
+            }
+          });
+        }
+
         try {
           await trackingApi.updateLocation(token, {
             latitude,
@@ -107,6 +133,7 @@ export default function DriverPortal() {
             accuracy: accuracy || null,
             heading: heading || null,
             speed: (typeof speed === 'number' && !isNaN(speed)) ? speed : null,
+            address: cachedAddress,
             source: 'driver_mobile_browser',
           });
         } catch (err) {
@@ -299,12 +326,20 @@ export default function DriverPortal() {
 
         {/* Real Metrics Banner */}
         {isGpsSharing && currentCoords && (
-          <div className="mt-3 p-2.5 bg-emerald-950/40 border border-emerald-600/40 rounded-lg flex items-center justify-between text-xs text-emerald-300">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Live GPS Active: {currentCoords.latitude.toFixed(4)}, {currentCoords.longitude.toFixed(4)}</span>
+          <div className="mt-3 p-3 bg-emerald-950/40 border border-emerald-600/40 rounded-lg space-y-1 text-xs text-emerald-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="font-semibold">Live GPS Active: {currentCoords.latitude.toFixed(4)}, {currentCoords.longitude.toFixed(4)}</span>
+              </div>
+              <span className="text-[11px] font-mono text-emerald-400">Broadcasting to Fleet</span>
             </div>
-            <span className="text-[11px] font-mono text-emerald-400">Broadcasting to Fleet</span>
+            {currentCoords.address && (
+              <p className="text-[11px] text-zinc-300 flex items-center gap-1 truncate pt-0.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                {currentCoords.address}
+              </p>
+            )}
           </div>
         )}
 
